@@ -11,20 +11,32 @@ Change your current loadout with 1/2/3/4 (you may have to activate "Num Lock" if
 <script>
 function engToChi(english){
     switch(english){
+        case "ash":
+            return "\u7070";
+        case "axe":
+            return "\u65A7";
         case "bow":
             return "\u5F13";
+        case "dog":
+            return "\u72D7";
         case "fast":
             return "\u5FEB";
         case "fire":
             return "\u706B";
         case "nothing":
             return "\u65E0";
+        case "ice":
+            return "\u51B0";
+        case "many":
+            return "\u591A";
         case "one":
             return "\u4E00"
         case "knife":
             return "\u5200";
         case "remove":
             return "\u9664";
+        case "shield":
+            return "\u76FE";
         case "strong":
             return "\u529B";
         case "three":
@@ -37,6 +49,8 @@ function engToChi(english){
             return "\u6811";
         case "wall":
             return "\u5899";
+        case "water":
+            return "\u6C34";
     }
     return "";
 }
@@ -70,6 +84,8 @@ function drawLoadout(runes,centerX,CenterY){
 function drawPlayer(viewX,viewY){
     drawX = viewX*space;
     drawY = viewY*space;
+    ctx.fillStyle = "black";
+    ctx.fillRect(drawX,drawY,space,space);
     ctx.strokeStyle = "white"; ctx.fillStyle = "white";
     ctx.strokeRect(drawX,drawY,space,space);
     drawLoadout(player.runes,drawX+halfSpace,drawY+halfSpace);
@@ -86,10 +102,18 @@ function drawPlay(){
             lookupX = x+viewStart.x;
             lookupY = y+viewStart.y;
             switch(map[lookupX][lookupY]){
+                case "ash":
+                    ctx.fillStyle = "gray";
+                    ctx.fillText(engToChi("ash"),drawX+halfSpace,drawY+halfSpace);
+                    break;
+                case "fire":
+                    ctx.fillStyle = "red";
+                    ctx.fillText(engToChi("fire"),drawX+halfSpace,drawY+halfSpace);
+                    break;
                 case "tree":
-                    ctx.strokeStyle = "lime";
+                    ctx.strokeStyle = "lightgreen";
                     ctx.strokeRect(drawX,drawY,space,space);
-                    ctx.fillStyle = "lime";
+                    ctx.fillStyle = "lightgreen";
                     ctx.fillText(engToChi("tree"),drawX+halfSpace,drawY+halfSpace);
                     break;
                 case "wall":
@@ -98,22 +122,31 @@ function drawPlay(){
                     ctx.fillStyle = "gray";
                     ctx.fillText(engToChi("wall"),drawX+halfSpace,drawY+halfSpace);
                     break;
-                case "fire":
-                    ctx.fillStyle = "red";
-                    ctx.fillText(engToChi("fire"),drawX+halfSpace,drawY+halfSpace);
+                case "water":
+                    ctx.fillStyle = "cornflowerblue";
+                    ctx.fillText(engToChi("water"),drawX+halfSpace,drawY+halfSpace);
+                    break;
             }
             switch(item[lookupX][lookupY]){
-                case "torch":
-                    ctx.fillStyle = "red";
-                    ctx.fillText(engToChi("torch"),drawX+halfSpace,drawY+halfSpace);
+                case "axe":
+                    ctx.fillStyle = "lightgray";
+                    ctx.fillText(engToChi("axe"),drawX+halfSpace,drawY+halfSpace);
+                    break;
+                case "bow":
+                    ctx.fillStyle = "tan";
+                    ctx.fillText(engToChi("bow"),drawX+halfSpace,drawY+halfSpace);
                     break;
                 case "knife":
                     ctx.fillStyle = "lightgray";
                     ctx.fillText(engToChi("knife"),drawX+halfSpace,drawY+halfSpace);
                     break;
-                case "bow":
-                    ctx.fillStyle = "tan";
-                    ctx.fillText(engToChi("bow"),drawX+halfSpace,drawY+halfSpace);
+                case "shield":
+                    ctx.fillStyle = "lightgray";
+                    ctx.fillText(engToChi("shield"),drawX+halfSpace,drawY+halfSpace);
+                    break;
+                case "torch":
+                    ctx.fillStyle = "red";
+                    ctx.fillText(engToChi("torch"),drawX+halfSpace,drawY+halfSpace);
                     break;
             }
         }
@@ -195,35 +228,38 @@ ctx = cnvs.getContext("2d");
 ctx.textBaseline = "middle";
 ctx.textAlign = "center";
 ctx.lineWidth = 1.5;
-player = {runes:[],loadouts:[[],[],[],[]],inventory:{},x:5,y:3,tillMove:0,moveCooldown:3};
+player = {runes:[],loadouts:[["torch"],[],[],[]],inventory:{},x:5,y:3,tillMove:0,moveCooldown:3};
 invMode = {mode:"remove",selection:0};
 space = 6; halfSpace = 5; quarterSpace = 4;
 levelSize = {x:25,y:20};
 viewSize = {x:15,y:15};
 viewStart = {x:0,y:0};
 viewBuffer = 5;
-map = [];
+map = []; mapProp = [];
 item = [];
 for(x=0;x<levelSize.x;x++){
-    map[x] = [];
+    map[x] = []; mapProp[x] = [];
     item[x] = [];
     for(y=0;y<levelSize.y;y++){
-        map[x][y] = "grass";
+        map[x][y] = "grass"; mapProp[x][y] = {};
         if((x*5+y*3)%9===0){
             map[x][y] = "tree";
         }
         if((x*6+y*5)%13===0){
             map[x][y] = "wall";
         }
+        if((x*9+y*8)%30===0){
+            map[x][y] = "water";
+        }
         item[x][y] = null;
     }
 }
-map[3][5] = "tree";
-map[3][6] = "tree";
-item[2][2] = "torch";
-item[2][4] = "torch";
+map[3][5] = "tree"; map[3][6] = "tree"; map[2][6] = "tree"; map[1][6] = "tree";
+item[2][2] = "torch"; item[2][4] = "torch";
 item[4][1] = "knife";
-item[5][1] = "bow";
+item[5][0] = "bow";
+item[6][1] = "axe";
+item[6][3] = "shield";
 solidMask = [];
 for(x=0;x<levelSize.x;x++){
     solidMask[x] = [];
@@ -234,8 +270,12 @@ for(x=0;x<levelSize.x;x++){
         else{
             solidMask[x][y] = false;
         }
+        if(map[x][y]==="tree"){
+            mapProp[x][y] = {heat:0};
+        }
     }
 }
+player.runes = player.loadouts[0];
 recalculateAfterResize();
 setInterval(function(){
     if(player.tillMove===0){
@@ -320,6 +360,68 @@ setInterval(function(){
         if(player.runes.includes("torch")){
             if(map[player.x+actionX][player.y+actionY]==="tree"){
                 map[player.x+actionX][player.y+actionY] = "fire";
+                mapProp[player.x+actionX][player.y+actionY] = {burnLeft:20};
+                solidMask[player.x+actionX][player.y+actionY] = false;
+            }
+        }
+        if(player.runes.includes("axe")){
+            if(map[player.x+actionX][player.y+actionY]==="tree"){
+                map[player.x+actionX][player.y+actionY] = "grass";
+                solidMask[player.x+actionX][player.y+actionY] = false;
+            }
+        }
+    }
+    for(x=0;x<levelSize.x;x++){
+        for(y=0;y<levelSize.y;y++){
+            if(map[x][y]==="fire"){
+                if(mapProp[x][y].burnLeft>0){
+                    mapProp[x][y].burnLeft -= 1;
+                    if(y-1>-1){
+                        if(mapProp[x][y-1].hasOwnProperty("heat")){
+                            if(mapProp[x][y-1].heat===8){
+                                map[x][y-1] = "fire"; mapProp[x][y-1] = {burnLeft:20};
+                            }
+                            else{
+                                mapProp[x][y-1].heat += 1;
+                            }
+                        }
+                    }
+                    if(x-1>-1){
+                        if(mapProp[x-1][y].hasOwnProperty("heat")){
+                            if(mapProp[x-1][y].heat===8){
+                                map[x-1][y] = "fire"; mapProp[x-1][y] = {burnLeft:20};
+                            }
+                            else{
+                                mapProp[x-1][y].heat += 1;
+                            }
+                        }
+                    }
+                    if(y+1<levelSize.y-1){
+                        if(mapProp[x][y+1].hasOwnProperty("heat")){
+                            if(mapProp[x][y+1].heat===8){
+                                map[x][y+1] = "fire"; mapProp[x][y+1] = {burnLeft:20};
+                            }
+                            else{
+                                mapProp[x][y+1].heat += 1;
+                            }
+                        }
+                    }
+                    if(x+1<levelSize.x-1){
+                        if(mapProp[x+1][y].hasOwnProperty("heat")){
+                            if(mapProp[x+1][y].heat===8){
+                                map[x+1][y] = "fire"; mapProp[x+1][y] = {burnLeft:20};
+                            }
+                            else{
+                                mapProp[x+1][y].heat += 1;
+                            }
+                        }
+                    }
+                }
+                else{
+                    mapProp[x][y] = {};
+                    map[x][y] = "ash";
+                    solidMask[x][y] = false;
+                }
             }
         }
     }
