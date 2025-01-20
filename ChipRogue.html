@@ -216,7 +216,7 @@ function drawPlay(){
     ctx.strokeRect(cnvs.width-invSpace,cnvs.height-invSpace,invSpace,invSpace);
     switch(invMode.mode){
         case "edit":
-            ctx.strokeRect(cnvs.height+invHalfSpace+invSpace*invMode.selection-halfSpace,invSpace+invHalfSpace-halfSpace,space,space);
+            ctx.strokeRect(cnvs.height+invHalfSpace+invSpace*(invMode.selection%4)-halfSpace,invSpace+Math.floor(invMode.selection/4)*invSpace+invHalfSpace-halfSpace,space,space);
             break;
         case "remove":
             ctx.strokeRect(cnvs.width-invHalfSpace-halfSpace,cnvs.height-invHalfSpace-halfSpace,space,space);
