@@ -1,56 +1,94 @@
 <html>
 <canvas id="theCanvas" width="900" height="600" style="border: 1px solid black"></canvas>
 <div id="theDiv">
-Move with WASD keys.<br><br>
-Perform actions with arrow keys.<br><br>
-The top-right shows your loadouts.<br>
-Once you've picked up runes, you can add them by first clicking the rune then the loadout.<br>
-You can remove them by clicking the "remove" button in the bottom-right then the loadout.<br><br>
+Move with WASD keys.
+<br><br>
+Perform actions with arrow keys (once you have items loaded).
+<br><br>
+The right side of the screen lets you manage which items you're using. The top-right shows your "loadouts" - sets of up to four items you can use simultaneously. The middle-right shows your inventory. You can click an item here and then a loadout to add it to that loadout. The bottom-right is the "remove" button. Click it and then a loadout to remove the newest item from it.<br>
+<br><br>
 Change your current loadout with 1/2/3/4 (you may have to activate "Num Lock" if using a numpad).
 </div>
 <script>
+function Dog(x,y){
+    this.x = x;
+    this.y = y;
+    this.tillMove = 0;
+    this.state = {name:"spurred",exhaustion:0,moveCounts:[2,3,6,8,24]};
+    this.randomMove = function(){
+        movePreference = [[0,-1],[-1,0],[0,1],[1,0]];
+        for(currentIndex=movePreference.length-1;currentIndex>-1;currentIndex--){
+            randomIndex = Math.floor(Math.random()*(currentIndex+1));
+            [movePreference[currentIndex],movePreference[randomIndex]] = [movePreference[randomIndex],movePreference[currentIndex]];
+        }
+        for(tryMove=0;tryMove<movePreference.length;tryMove++){
+            tryX = this.x+movePreference[tryMove][0];
+            tryY = this.y+movePreference[tryMove][1];
+            if((tryX>0)&&(tryX<levelSize.x-1)&&(tryY>0)&&(tryY<levelSize.y-1)){
+                if(!solidMask[tryX][tryY]){
+                    solidMask[this.x][this.y] = false;
+                    this.x += movePreference[tryMove][0];
+                    this.y += movePreference[tryMove][1];
+                    solidMask[this.x][this.y] = true;
+                    break;
+                }
+            }
+        }
+    }
+    this.update = function(){
+        if(this.tillMove===0){
+            switch(this.state.name){
+                case "spurred":
+                    if(this.state.exhaustion<this.state.moveCounts.length){
+                        this.randomMove();
+                        this.tillMove = this.state.moveCounts[this.state.exhaustion];
+                        this.state.exhaustion += 1;
+                    }
+                    else{
+                        if(Math.random()>.7){
+                            this.state = {name:"dozy"};
+                        }
+                        else{
+                            this.state.exhaustion = 0;
+                        }
+                    }
+                    break;
+                case "dozy":
+                    this.randomMove();
+                    this.tillMove = 30+Math.floor(Math.random()*30);
+                    if(Math.random()>.7){
+                        this.state = {name:"spurred",exhaustion:0,moveCounts:[2,4,6,12,24]};
+                    }
+            }
+        }
+        else{
+            this.tillMove -= 1;
+        }
+    }
+}
 function engToChi(english){
     switch(english){
-        case "ash":
-            return "\u7070";
-        case "axe":
-            return "\u65A7";
-        case "bow":
-            return "\u5F13";
-        case "dog":
-            return "\u72D7";
-        case "fast":
-            return "\u5FEB";
-        case "fire":
-            return "\u706B";
-        case "nothing":
-            return "\u65E0";
-        case "ice":
-            return "\u51B0";
-        case "many":
-            return "\u591A";
-        case "one":
-            return "\u4E00"
-        case "knife":
-            return "\u5200";
-        case "remove":
-            return "\u9664";
-        case "shield":
-            return "\u76FE";
-        case "strong":
-            return "\u529B";
-        case "three":
-            return "\u4E09";
-        case "torch":
-            return "\u70AC";
-        case "two":
-            return "\u4E8C";
-        case "tree":
-            return "\u6811";
-        case "wall":
-            return "\u5899";
-        case "water":
-            return "\u6C34";
+        case "ash": return "\u7070";
+        case "axe": return "\u65A7";
+        case "bow": return "\u5F13";
+        case "dog": return "\u72D7";
+        case "fast": return "\u5FEB";
+        case "fire": return "\u706B";
+        case "nothing": return "\u65E0";
+        case "ice": return "\u51B0";
+        case "many": return "\u591A";
+        case "meat": return "\u8089";
+        case "one": return "\u4E00";
+        case "knife": return "\u5200";
+        case "remove": return "\u9664";
+        case "shield": return "\u76FE";
+        case "strong": return "\u529B";
+        case "three": return "\u4E09";
+        case "torch": return "\u70AC";
+        case "two": return "\u4E8C";
+        case "tree": return "\u6811";
+        case "wall": return "\u5899";
+        case "water": return "\u6C34";
     }
     return "";
 }
@@ -152,6 +190,21 @@ function drawPlay(){
         }
     }
     drawPlayer(player.x-viewStart.x,player.y-viewStart.y);
+    for(a=0;a<npc.length;a++){
+        drawX = space*(npc[a].x-viewStart.x);
+        drawY = space*(npc[a].y-viewStart.y);
+        if((drawX>0)&&(drawX<viewSize.x*space)&&(drawY>0)&&(drawY<viewSize.y*space)){
+            switch(npc[a].constructor.name){
+            case "Dog":
+                ctx.fillStyle = "black";
+                ctx.fillRect(drawX,drawY,space,space);
+                ctx.strokeStyle = "tan";
+                ctx.strokeRect(drawX,drawY,space,space);
+                ctx.fillStyle = "tan";
+                ctx.fillText(engToChi("dog"),drawX+halfSpace,drawY+halfSpace);
+            }
+        }
+    }
     ctx.strokeStyle = "white";
     ctx.fillStyle = "white";
     ctx.beginPath(); ctx.moveTo(cnvs.height,0); ctx.lineTo(cnvs.height,cnvs.height); ctx.stroke();
@@ -228,7 +281,7 @@ ctx = cnvs.getContext("2d");
 ctx.textBaseline = "middle";
 ctx.textAlign = "center";
 ctx.lineWidth = 1.5;
-player = {runes:[],loadouts:[["torch"],[],[],[]],inventory:{},x:5,y:3,tillMove:0,moveCooldown:3};
+player = {runes:[],loadouts:[[],[],[],[]],inventory:{},x:5,y:3,tillMove:0,moveCooldown:3};
 invMode = {mode:"remove",selection:0};
 space = 6; halfSpace = 5; quarterSpace = 4;
 levelSize = {x:25,y:20};
@@ -276,34 +329,29 @@ for(x=0;x<levelSize.x;x++){
     }
 }
 player.runes = player.loadouts[0];
+npc = [new Dog(8,8)];
+for(a=0;a<npc.length;a++){
+    solidMask[npc[a].x][npc[a].y] = true;
+}
 recalculateAfterResize();
 setInterval(function(){
+    moveKeys = [keyTrack.indexOf("w"),keyTrack.indexOf("a"),keyTrack.indexOf("s"),keyTrack.indexOf("d")];
     if(player.tillMove===0){
-        moveKeys = [keyTrack.indexOf("w"),keyTrack.indexOf("a"),keyTrack.indexOf("s"),keyTrack.indexOf("d")];
+        
         //Handle movement
         if(!moveKeys.every((element) => element === -1)){
+            //alert(moveKeys.toString());
             recentMoveIndex = moveKeys.indexOf(Math.max(...moveKeys));
-            if(recentMoveIndex===0){
-                if((player.y>0)&&(!solidMask[player.x][player.y-1])){
-                    player.y -= 1;
-                    player.tillMove = player.moveCooldown;
-                }
-            }
-            if(recentMoveIndex===1){
-                if((player.x>0)&&(!solidMask[player.x-1][player.y])){
-                    player.x -= 1;
-                    player.tillMove = player.moveCooldown;
-                }
-            }
-            if(recentMoveIndex===2){
-                if((player.y<levelSize.y-1)&&(!solidMask[player.x][player.y+1])){
-                    player.y += 1;
-                    player.tillMove = player.moveCooldown;
-                }
-            }
-            if(recentMoveIndex===3){
-                if((player.x<levelSize.x-1)&&(!solidMask[player.x+1][player.y])){
-                    player.x += 1;
+            possibleMove = [[0,-1],[-1,0],[0,1],[1,0]];
+            tryX = player.x + possibleMove[recentMoveIndex][0];
+            tryY = player.y + possibleMove[recentMoveIndex][1];
+            //alert(tryX+","+tryY);
+            if((tryX>0)&&(tryX<levelSize.x-1)&&(tryY>0)&&(tryY<levelSize.y-1)){
+                if(!solidMask[tryX][tryY]){
+                    solidMask[player.x][player.y] = false;
+                    player.x = tryX;
+                    player.y = tryY;
+                    solidMask[player.x][player.y] = true;
                     player.tillMove = player.moveCooldown;
                 }
             }
@@ -367,6 +415,7 @@ setInterval(function(){
         if(player.runes.includes("axe")){
             if(map[player.x+actionX][player.y+actionY]==="tree"){
                 map[player.x+actionX][player.y+actionY] = "grass";
+                mapProp[player.x+actionX][player.y+actionY] = {};
                 solidMask[player.x+actionX][player.y+actionY] = false;
             }
         }
@@ -424,6 +473,9 @@ setInterval(function(){
                 }
             }
         }
+    }
+    for(a=0;a<npc.length;a++){
+        npc[a].update();
     }
     drawPlay();
 },33);
