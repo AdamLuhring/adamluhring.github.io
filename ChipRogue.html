@@ -123,6 +123,7 @@ function Skeleton(x,y){
 }
 function Spider(x,y){
     this.x = x; this.y = y;
+    solidMask[this.x][this.y] = true;
     this.tillMove = Math.floor(60+Math.random()*30);
     this.state = {name:"resting"};
     this.update = function(){
@@ -533,7 +534,7 @@ for(x=0;x<levelSize.x;x++){
     }
 }
 player.runes = player.loadouts[0]; applyRunes();
-npc = [new Dog(8,8), new Skeleton(10,10), new Spider(12,12)];
+npc = [new Dog(8,8), new Skeleton(10,10), new Spider(12,12), new Spider(13,12), new Spider(14,12)];
 for(a=0;a<npc.length;a++){
     solidMask[npc[a].x][npc[a].y] = true;
 }
