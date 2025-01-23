@@ -24,7 +24,7 @@ function Dog(x,y){
         for(tryMove=0;tryMove<movePreference.length;tryMove++){
             tryX = this.x+movePreference[tryMove][0];
             tryY = this.y+movePreference[tryMove][1];
-            if((tryX>-1)&&(tryX<levelSize.x)&&(tryY>-1)&&(tryY<levelSize.y)){
+            if(isInBounds([tryX,tryY])){
                 if((!solidMask[tryX][tryY])&&(map[tryX][tryY]!=="water")){
                     solidMask[this.x][this.y] = false;
                     this.x += movePreference[tryMove][0];
@@ -120,6 +120,52 @@ function Skeleton(x,y){
                 break;
         }
     }
+}
+function Spider(x,y){
+    this.x = x; this.y = y;
+    this.tillMove = Math.floor(60+Math.random()*30);
+    this.state = {name:"resting"};
+    this.update = function(){
+        if(this.tillMove===0){
+            switch(this.state.name){
+                case "resting":
+                    startOption = [[0,-1],[-1,0],[0,1],[1,0]];
+                    finalOption = [];
+                    for(tryMove=0;tryMove<startOption.length;tryMove++){
+                        tryX = this.x+startOption[tryMove][0];
+                        tryY = this.y+startOption[tryMove][1];
+                        if(isInBounds([tryX,tryY])&&!solidMask[tryX][tryY]){
+                            finalOption.push(startOption[tryMove]);
+                        }
+                    }
+                    this.state = {name:"transit",direction:finalOption[Math.floor(Math.random()*finalOption.length)]};
+                    break;
+                case "transit":
+                    tryX = this.x+this.state.direction[0];
+                    tryY = this.y+this.state.direction[1];
+                    if(isInBounds([tryX,tryY])&&!solidMask[tryX][tryY]){
+                        solidMask[this.x][this.y] = false;
+                        this.x += this.state.direction[0];
+                        this.y += this.state.direction[1];
+                        solidMask[this.x][this.y] = true;
+                        this.tillMove = 3;
+                    }
+                    else{
+                        this.state = {name:"resting"};
+                        this.tillMove = Math.floor(20+Math.random()*15);
+                    }
+            }
+        }
+        else{
+            this.tillMove -= 1;
+        }
+    }
+}
+function isInBounds(coordinate){
+    if((coordinate[0]>-1)&&(coordinate[0]<levelSize.x)&&(coordinate[1]>-1)&&(coordinate[1]<levelSize.y)){
+        return true;
+    }
+    return false;
 }
 function engToChi(english){
     switch(english){
@@ -299,18 +345,16 @@ function drawPlay(){
         drawX = space*(npc[a].x-viewStart.x);
         drawY = space*(npc[a].y-viewStart.y);
         if((drawX>0)&&(drawX<viewSize.x*space)&&(drawY>0)&&(drawY<viewSize.y*space)){
+            ctx.fillStyle = "black";
+            ctx.fillRect(drawX,drawY,space,space);
             switch(npc[a].constructor.name){
                 case "Dog":
-                    ctx.fillStyle = "black";
-                    ctx.fillRect(drawX,drawY,space,space);
                     ctx.strokeStyle = "tan";
                     ctx.strokeRect(drawX,drawY,space,space);
                     ctx.fillStyle = "tan";
                     ctx.fillText(engToChi("dog"),drawX+halfSpace,drawY+halfSpace);
                     break;
                 case "Skeleton":
-                    ctx.fillStyle = "black";
-                    ctx.fillRect(drawX,drawY,space,space);
                     ctx.fillStyle = matToColor("bone");
                     ctx.strokeStyle = matToColor("bone");
                     if(npc[a].state.name==="dormant"){
@@ -321,6 +365,14 @@ function drawPlay(){
                         ctx.fillText(engToChi("skeleton0"),drawX+halfSpace,drawY+quarterSpace);
                         ctx.fillText(engToChi("skeleton1"),drawX+halfSpace,drawY+halfSpace+quarterSpace);
                     }
+                    break;
+                case "Spider":
+                    ctx.strokeStyle = "tan";
+                    ctx.strokeRect(drawX,drawY,space,space);
+                    ctx.fillStyle = "red";
+                    ctx.fillText(engToChi("spider0"),drawX+halfSpace,drawY+quarterSpace);
+                    ctx.fillText(engToChi("spider1"),drawX+halfSpace,drawY+halfSpace+quarterSpace);
+                    break;
             }
         }
     }
@@ -481,7 +533,7 @@ for(x=0;x<levelSize.x;x++){
     }
 }
 player.runes = player.loadouts[0]; applyRunes();
-npc = [new Dog(8,8), new Skeleton(10,10)];
+npc = [new Dog(8,8), new Skeleton(10,10), new Spider(12,12)];
 for(a=0;a<npc.length;a++){
     solidMask[npc[a].x][npc[a].y] = true;
 }
@@ -497,7 +549,7 @@ setInterval(function(){
             tryX = player.x + possibleMove[recentMoveIndex][0];
             tryY = player.y + possibleMove[recentMoveIndex][1];
             //alert(tryX+","+tryY);
-            if((tryX>-1)&&(tryX<levelSize.x)&&(tryY>-1)&&(tryY<levelSize.y)){
+            if(isInBounds([tryX,tryY])){
                 if(!solidMask[tryX][tryY]){
                     solidMask[player.x][player.y] = false;
                     player.x = tryX;
