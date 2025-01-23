@@ -139,7 +139,9 @@ function Spider(x,y){
                             finalOption.push(startOption[tryMove]);
                         }
                     }
-                    this.state = {name:"transit",direction:finalOption[Math.floor(Math.random()*finalOption.length)]};
+                    if(finalOption.length>0){
+                        this.state = {name:"transit",direction:finalOption[Math.floor(Math.random()*finalOption.length)]};
+                    }
                     break;
                 case "transit":
                     tryX = this.x+this.state.direction[0];
@@ -534,7 +536,9 @@ for(x=0;x<levelSize.x;x++){
     }
 }
 player.runes = player.loadouts[0]; applyRunes();
-npc = [new Dog(8,8), new Skeleton(10,10), new Spider(12,12), new Spider(13,12), new Spider(14,12)];
+npc = [new Dog(8,8), new Skeleton(10,10),
+    new Spider(12,11), new Spider(13,11), new Spider(14,11),
+    new Spider(12,12), new Spider(13,12), new Spider(14,12)];
 for(a=0;a<npc.length;a++){
     solidMask[npc[a].x][npc[a].y] = true;
 }
