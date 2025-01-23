@@ -345,7 +345,7 @@ function drawPlay(){
     for(a=0;a<npc.length;a++){
         drawX = space*(npc[a].x-viewStart.x);
         drawY = space*(npc[a].y-viewStart.y);
-        if((drawX>0)&&(drawX<viewSize.x*space)&&(drawY>0)&&(drawY<viewSize.y*space)){
+        if((drawX>-1)&&(drawX<viewSize.x*space)&&(drawY>-1)&&(drawY<viewSize.y*space)){
             ctx.fillStyle = "black";
             ctx.fillRect(drawX,drawY,space,space);
             switch(npc[a].constructor.name){
