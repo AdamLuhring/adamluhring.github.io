@@ -151,11 +151,11 @@ function Spider(x,y){
                         this.x += this.state.direction[0];
                         this.y += this.state.direction[1];
                         solidMask[this.x][this.y] = true;
-                        this.tillMove = 3;
+                        this.tillMove = 1;
                     }
                     else{
                         this.state = {name:"resting"};
-                        this.tillMove = Math.floor(20+Math.random()*15);
+                        this.tillMove = Math.floor(20+Math.random()*25);
                     }
             }
         }
