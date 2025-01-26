@@ -406,11 +406,29 @@ function drawPlay(){
         ctx.fillText(engToChi(Object.keys(player.inventory)[a]),cnvs.height+invHalfSpace+invSpace*(a%4),invSpace*Math.floor(a/4+1)+invHalfSpace);
     }
 }
+function drawPause(){
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,cnvs.width,cnvs.height);
+    ctx.fillStyle = "white";
+    ctx.fillText("Press 'P' to resume play.",cnvs.width/2,cnvs.height/2);
+}
 function keyDownHandler(e){
     if(e.repeat===false){
         keyTrack.push(e.key);
+        if(e.key==="p"){
+            switch(game.state.name){
+                case "play":
+                    clearInterval(gameClock);
+                    game.state.name = "pause";
+                    drawPause();
+                    break;
+                case "pause":
+                    gameClock = setInterval(gameFrame,33);
+                    game.state.name = "play";
+                    break;
+            }
+        }
     }
-    
 }
 function keyUpHandler(e){
     index = keyTrack.indexOf(e.key);
@@ -487,74 +505,7 @@ function expendItem(toExpend){
         invMode.selection -= 1;
     }
 }
-window.document.addEventListener("keydown",keyDownHandler);
-window.document.addEventListener("keyup",keyUpHandler);
-window.document.addEventListener("click",clickHandler);
-keyTrack = [];
-cnvs = document.getElementById("theCanvas");
-cnvs.focus();
-ctx = cnvs.getContext("2d");
-ctx.textBaseline = "middle";
-ctx.textAlign = "center";
-ctx.lineWidth = 1.5;
-player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},x:5,y:3,tillMove:0,moveCooldown:3,tillAction:0,actionCooldown:6};
-invMode = {mode:"remove",selection:0};
-space = 6; halfSpace = 5; quarterSpace = 4;
-levelSize = {x:25,y:20};
-viewSize = {x:15,y:15};
-viewStart = {x:0,y:0};
-viewBuffer = 5;
-map = []; mapProp = [];
-item = [];
-for(x=0;x<levelSize.x;x++){
-    map[x] = []; mapProp[x] = [];
-    item[x] = [];
-    for(y=0;y<levelSize.y;y++){
-        map[x][y] = "grass"; mapProp[x][y] = {};
-        if((x*5+y*3)%9===0){
-            map[x][y] = "tree";
-        }
-        if((x*6+y*5)%13===0){
-            map[x][y] = "wall";
-        }
-        if((x*9+y*8)%30===0){
-            map[x][y] = "water";
-        }
-        item[x][y] = null;
-    }
-}
-map[3][5] = "tree"; map[3][6] = "tree"; map[2][6] = "tree"; map[1][6] = "tree";
-map[3][2] = "gate"; mapProp[3][2] = {closed:true};
-map[3][3] = "gate"; mapProp[3][3] = {closed:false};
-item[1][0] = "axe"; item[2][0] = "bow"; item[3][0] = "fast"; item[4][0] = "meat";
-item[5][0] = "knife"; item[6][0] = "shield"; item[7][0] = "torch"; item[8][0] = "blink";
-solidMask = [];
-for(x=0;x<levelSize.x;x++){
-    solidMask[x] = [];
-    for(y=0;y<levelSize.y;y++){
-        if(["tree","wall"].includes(map[x][y])){
-            solidMask[x][y] = true;
-        }
-        else{
-            solidMask[x][y] = false;
-        }
-        if((map[x][y]==="gate")&&(mapProp[x][y].closed)){
-            solidMask[x][y] = true;
-        }
-        if(map[x][y]==="tree"){
-            mapProp[x][y] = {heat:0};
-        }
-    }
-}
-player.runes = player.loadouts[0]; applyRunes();
-npc = [new Dog(8,8), new Skeleton(10,10),
-    new Spider(12,11), new Spider(13,11), new Spider(14,11),
-    new Spider(12,12), new Spider(13,12), new Spider(14,12)];
-for(a=0;a<npc.length;a++){
-    solidMask[npc[a].x][npc[a].y] = true;
-}
-recalculateAfterResize();
-setInterval(function(){
+function gameFrame(){
     moveKeys = [keyTrack.indexOf("w"),keyTrack.indexOf("a"),keyTrack.indexOf("s"),keyTrack.indexOf("d")];
     if(player.tillMove===0){
         if(!moveKeys.every((element) => element === -1)){
@@ -737,6 +688,75 @@ setInterval(function(){
         npc[a].update();
     }
     drawPlay();
-},33);
+}
+window.document.addEventListener("keydown",keyDownHandler);
+window.document.addEventListener("keyup",keyUpHandler);
+window.document.addEventListener("click",clickHandler);
+keyTrack = [];
+cnvs = document.getElementById("theCanvas");
+cnvs.focus();
+ctx = cnvs.getContext("2d");
+ctx.textBaseline = "middle";
+ctx.textAlign = "center";
+ctx.lineWidth = 1.5;
+game = {state:{name:"play"}};
+player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},x:5,y:3,tillMove:0,moveCooldown:3,tillAction:0,actionCooldown:6};
+invMode = {mode:"remove",selection:0};
+space = 6; halfSpace = 5; quarterSpace = 4;
+levelSize = {x:25,y:20};
+viewSize = {x:15,y:15};
+viewStart = {x:0,y:0};
+viewBuffer = 5;
+map = []; mapProp = [];
+item = [];
+for(x=0;x<levelSize.x;x++){
+    map[x] = []; mapProp[x] = [];
+    item[x] = [];
+    for(y=0;y<levelSize.y;y++){
+        map[x][y] = "grass"; mapProp[x][y] = {};
+        if((x*5+y*3)%9===0){
+            map[x][y] = "tree";
+        }
+        if((x*6+y*5)%13===0){
+            map[x][y] = "wall";
+        }
+        if((x*9+y*8)%30===0){
+            map[x][y] = "water";
+        }
+        item[x][y] = null;
+    }
+}
+map[3][5] = "tree"; map[3][6] = "tree"; map[2][6] = "tree"; map[1][6] = "tree";
+map[3][2] = "gate"; mapProp[3][2] = {closed:true};
+map[3][3] = "gate"; mapProp[3][3] = {closed:false};
+item[1][0] = "axe"; item[2][0] = "bow"; item[3][0] = "fast"; item[4][0] = "meat";
+item[5][0] = "knife"; item[6][0] = "shield"; item[7][0] = "torch"; item[8][0] = "blink";
+solidMask = [];
+for(x=0;x<levelSize.x;x++){
+    solidMask[x] = [];
+    for(y=0;y<levelSize.y;y++){
+        if(["tree","wall"].includes(map[x][y])){
+            solidMask[x][y] = true;
+        }
+        else{
+            solidMask[x][y] = false;
+        }
+        if((map[x][y]==="gate")&&(mapProp[x][y].closed)){
+            solidMask[x][y] = true;
+        }
+        if(map[x][y]==="tree"){
+            mapProp[x][y] = {heat:0};
+        }
+    }
+}
+player.runes = player.loadouts[0]; applyRunes();
+npc = [new Dog(8,8), new Skeleton(10,10),
+    new Spider(12,11), new Spider(13,11), new Spider(14,11),
+    new Spider(12,12), new Spider(13,12), new Spider(14,12)];
+for(a=0;a<npc.length;a++){
+    solidMask[npc[a].x][npc[a].y] = true;
+}
+recalculateAfterResize();
+gameClock = setInterval(gameFrame,33);
 </script>
 </html>
