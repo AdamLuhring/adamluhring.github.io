@@ -10,6 +10,51 @@ The right side of the screen lets you manage which items you're using. The top-r
 Change your current loadout with 1/2/3/4 (you may have to activate "Num Lock" if using a numpad).
 </div>
 <script>
+function Cockroach(x,y){
+    this.x = x; this.y = y;
+    this.tillMove = 0; this.moveCooldown = 5;
+    this.state = {facing:"right",spin:"c"};
+    this.update = function(){
+        if(this.tillMove===0){
+            movePreference = []; moveName = [];
+            switch(this.state.facing){
+                case "up":
+                    movePreference = [[1,0],[0,-1],[-1,0],[0,1]];
+                    moveName = ["right","up","left","down"];
+                    break;
+                case "left":
+                    movePreference = [[0,-1],[-1,0],[0,1],[1,0]];
+                    moveName = ["up","left","down","right"];
+                    break;
+                case "down":
+                    movePreference = [[-1,0],[0,1],[1,0],[0,-1]];
+                    moveName = ["left","down","right","up"];
+                    break;
+                case "right":
+                    movePreference = [[0,1],[1,0],[0,-1],[-1,0]];
+                    moveName = ["down","right","up","left"];
+                    break;
+            }
+            for(tryMove=0;tryMove<movePreference.length;tryMove++){
+                tryX = this.x+movePreference[tryMove][0];
+                tryY = this.y+movePreference[tryMove][1];
+                if(isInBounds([tryX,tryY])){
+                    if(!solidMask[tryX][tryY]){
+                        solidMask[this.x][this.y] = false;
+                        this.x = tryX; this.y = tryY;
+                        solidMask[this.x][this.y] = true;
+                        this.state.facing = moveName[tryMove];
+                        this.tillMove = this.moveCooldown;
+                        break;
+                    }
+                }
+            }
+        }
+        else{
+            this.tillMove -= 1;
+        }
+    };
+}
 function Dog(x,y){
     this.x = x; this.y = y;
     this.fed = 0;
@@ -177,6 +222,7 @@ function engToChi(english){
         case "blink": return "\u7728";
         case "bone": return "\u9AA8";
         case "bow": return "\u5F13";
+        case "cockroach": return "\u87D1";
         case "dog": return "\u72D7";
         case "fast": return "\u5FEB";
         case "fire": return "\u706B";
@@ -356,6 +402,12 @@ function drawPlay(){
             ctx.fillStyle = "black";
             ctx.fillRect(drawX,drawY,space,space);
             switch(npc[a].constructor.name){
+                case "Cockroach":
+                    ctx.strokeStyle = "brown";
+                    ctx.strokeRect(drawX,drawY,space,space);
+                    ctx.fillStyle = "tan";
+                    ctx.fillText(engToChi("cockroach"),drawX+halfSpace,drawY+halfSpace);
+                    break;
                 case "Dog":
                     ctx.strokeStyle = "tan";
                     ctx.strokeRect(drawX,drawY,space,space);
@@ -427,6 +479,9 @@ function keyDownHandler(e){
                     game.state.name = "play";
                     break;
             }
+        }
+        if(e.key==="l"){
+            alert(player.x+","+player.y);
         }
     }
 }
@@ -750,7 +805,7 @@ for(x=0;x<levelSize.x;x++){
     }
 }
 player.runes = player.loadouts[0]; applyRunes();
-npc = [new Dog(8,8), new Skeleton(10,10),
+npc = [new Dog(8,8), new Skeleton(10,10), new Cockroach(14,3),
     new Spider(12,11), new Spider(13,11), new Spider(14,11),
     new Spider(12,12), new Spider(13,12), new Spider(14,12)];
 for(a=0;a<npc.length;a++){
