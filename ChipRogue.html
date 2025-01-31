@@ -222,10 +222,17 @@ function engToChi(english){
         case "blink": return "\u7728";
         case "bone": return "\u9AA8";
         case "bow": return "\u5F13";
-        case "cockroach": return "\u87D1";
+        case "building0": return "\u5EFA";
+        case "building1": return "\u7B51";
+        case "cockroach0": return "\u87D1";
+        case "cockroach1": return "\u8782";
         case "dog": return "\u72D7";
+        case "exit0": return "\u51FA";
+        case "exit1": return "\u53E3";
         case "fast": return "\u5FEB";
         case "fire": return "\u706B";
+        case "forest0": return "\u68EE";
+        case "forest1": return "\u6797";
         case "gate": return "\u95E8";
         case "hand": return "\u624B";
         case "nothing": return "\u65E0";
@@ -275,6 +282,7 @@ function matToColor(material){
 }
 function recalculateAfterResize(){
     space = Math.round(cnvs.height/viewSize.y);
+    doubleSpace = Math.floor(space*2);
     halfSpace = Math.floor(space/2);
     quarterSpace = Math.floor(halfSpace/2);
     ctx.font = "" + (halfSpace-4) + "px Arial";
@@ -328,6 +336,15 @@ function drawPlay(){
                 case "bone":
                     ctx.fillStyle = matToColor("bone");
                     ctx.fillText(engToChi("bone"),drawX+halfSpace,drawY+halfSpace);
+                    break;
+                case "exit":
+                    ctx.setLineDash([8,8]);
+                    ctx.strokeStyle = matToColor("water")
+                    ctx.strokeRect(drawX,drawY,space,space);
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = matToColor("water")
+                    ctx.fillText(engToChi("exit0"),drawX+halfSpace,drawY+quarterSpace);
+                    ctx.fillText(engToChi("exit1"),drawX+halfSpace,drawY+halfSpace+quarterSpace);
                     break;
                 case "fire":
                     ctx.fillStyle = matToColor("fire");
@@ -406,7 +423,8 @@ function drawPlay(){
                     ctx.strokeStyle = "brown";
                     ctx.strokeRect(drawX,drawY,space,space);
                     ctx.fillStyle = "tan";
-                    ctx.fillText(engToChi("cockroach"),drawX+halfSpace,drawY+halfSpace);
+                    ctx.fillText(engToChi("cockroach0"),drawX+halfSpace,drawY+quarterSpace);
+                    ctx.fillText(engToChi("cockroach1"),drawX+halfSpace,drawY+halfSpace+quarterSpace);
                     break;
                 case "Dog":
                     ctx.strokeStyle = "tan";
@@ -464,6 +482,102 @@ function drawPause(){
     ctx.fillStyle = "white";
     ctx.fillText("Press 'P' to resume play.",cnvs.width/2,cnvs.height/2);
 }
+function fixView(){
+    if(player.x<viewStart.x+viewBuffer){
+        viewStart.x = Math.max(0,player.x-viewBuffer);
+    }
+    if(player.x>viewStart.x+viewSize.x-viewBuffer-1){
+        viewStart.x = Math.min(levelSize.x-viewSize.x,player.x+viewBuffer-viewSize.x+1);
+    }
+    if(player.y<viewStart.y+viewBuffer){
+        viewStart.y = Math.max(0,player.y-viewBuffer);
+    }
+    if(player.y>viewStart.y+viewSize.y-viewBuffer-1){
+        viewStart.y = Math.min(levelSize.y-viewSize.y,player.y+viewBuffer-viewSize.y+1);
+    }
+}
+function makeLevel(kind,feel){
+    switch(kind){
+        case "building":
+            levelSize = {x:16,y:17};
+            map = []; mapProp = []; item = []; solidMask = [];
+            for(a=0;a<levelSize.x;a++){
+                map[a] = []; mapProp[a] = []; item[a] = []; solidMask[a] = [];
+                for(b=0;b<levelSize.y;b++){
+                    map[a][b] = ""; mapProp[a][b] = {}; item[a][b] = null; solidMask[a][b] = false;
+                    if((a===0)||(a===levelSize.x-1)||(b===0)||(b===levelSize.y-1)){
+                        map[a][b] = "wall";
+                    }
+                }
+            }
+            player.x = 1; player.y = 1; map[18][18] = "exit";
+            break;
+        case "forest":
+            levelSize = {x:20,y:20};
+            map = []; mapProp = []; item = []; solidMask = [];
+            for(a=0;a<levelSize.x;a++){
+                map[a] = []; mapProp[a] = []; item[a] = []; solidMask[a] = [];
+                for(b=0;b<levelSize.y;b++){
+                    map[a][b] = ""; mapProp[a][b] = {}; item[a][b] = null; solidMask[a][b] = false;
+                    if((a===0)||(a===levelSize.x-1)||(b===0)||(b===levelSize.y-1)){
+                        map[a][b] = "tree";
+                    }
+                }
+            }
+            player.x = 1; player.y = 1; map[18][18] = "exit";
+            break;
+    }
+    for(a=0;a<levelSize.x;a++){
+        for(b=0;b<levelSize.y;b++){
+            if(["wall","tree"].includes(map[a][b])){
+                solidMask[a][b] = true;
+            }
+        }
+    }
+}
+function drawLevelSelect(){
+    ctx.lineWidth = 3;
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,cnvs.width,cnvs.height);
+    ctx.strokeStyle = "white";
+    ctx.strokeRect(center.x-space,center.y-space,doubleSpace,doubleSpace);
+    ctx.fillStyle = "white";
+    ctx.font = "" + (space-8) + "px Arial";
+    if(player.runes.length>2){
+        ctx.fillText(engToChi(player.runes[0]),center.x+halfSpace,center.y-halfSpace);
+        ctx.fillText(engToChi(player.runes[1]),center.x+halfSpace,center.y+halfSpace);
+        ctx.fillText(engToChi(player.runes[2]),center.x-halfSpace,center.y-halfSpace);
+        ctx.fillText(engToChi(player.runes[3]),center.x-halfSpace,center.y+halfSpace);
+    }
+    if(player.runes.length===2){
+        ctx.fillText(engToChi(player.runes[0]),center.x,center.y-halfSpace);
+        ctx.fillText(engToChi(player.runes[1]),center.x,center.y+halfSpace);
+    }
+    if(player.runes.length===1){
+        ctx.fillText(engToChi(player.runes[0]),center.x,center.y);
+    }
+    if(player.runes.length===0){
+        ctx.fillText(engToChi("hand"),center.x,center.y);
+    }
+    levelCenter = [{x:center.x,y:center.y-doubleSpace-space},{x:center.x-doubleSpace-space,y:center.y},{x:center.x,y:center.y+doubleSpace+space},{x:center.x+doubleSpace+space,y:center.y}]
+    ctx.strokeStyle = "red";
+    for(a=0;a<4;a++){
+        ctx.strokeRect(levelCenter[a].x-space,levelCenter[a].y-space,doubleSpace,doubleSpace);
+    }
+    ctx.fillStyle = "gold";
+    for(a=0;a<4;a++){
+        switch(game.state.levelOption[a]){
+            case "building":
+                ctx.fillText(engToChi("building0"),levelCenter[a].x,levelCenter[a].y-halfSpace);
+                ctx.fillText(engToChi("building1"),levelCenter[a].x,levelCenter[a].y+halfSpace);
+                break;
+            case "forest":
+                ctx.fillText(engToChi("forest0"),levelCenter[a].x,levelCenter[a].y-halfSpace);
+                ctx.fillText(engToChi("forest1"),levelCenter[a].x,levelCenter[a].y+halfSpace);
+                break;
+        }
+    }
+}
 function keyDownHandler(e){
     if(e.repeat===false){
         keyTrack.push(e.key);
@@ -480,8 +594,23 @@ function keyDownHandler(e){
                     break;
             }
         }
-        if(e.key==="l"){
-            alert(player.x+","+player.y);
+        if(game.state.name==="levelSelect"){
+            switch(e.key){
+                case "1":
+                    player.runes = player.loadouts[0];
+                    break;
+                case "2":
+                    player.runes = player.loadouts[1];
+                    break;
+                case "3":
+                    player.runes = player.loadouts[2];
+                    break;
+                case "4":
+                    player.runes = player.loadouts[3];
+                    break;
+            }
+            applyRunes();
+            drawLevelSelect();
         }
     }
 }
@@ -597,6 +726,12 @@ function gameFrame(){
                     }
                 }
             }
+            if(map[player.x][player.y]==="exit"){
+                game.state.name = "levelSelect";
+                game.state.levelOption = ["forest","building","forest","building"];
+                clearInterval(gameClock);
+                drawLevelSelect();
+            }
             if(item[player.x][player.y]!==null){
                 if(player.inventory.hasOwnProperty(item[player.x][player.y])){
                     player.inventory[item[player.x][player.y]] += 1;
@@ -606,19 +741,7 @@ function gameFrame(){
                 }
                 item[player.x][player.y] = null;
             }
-            //Adjust viewStart based on new player position
-            if(player.x<viewStart.x+viewBuffer){
-                viewStart.x = Math.max(0,player.x-viewBuffer);
-            }
-            if(player.x>viewStart.x+viewSize.x-viewBuffer-1){
-                viewStart.x = Math.min(levelSize.x-viewSize.x,player.x+viewBuffer-viewSize.x+1);
-            }
-            if(player.y<viewStart.y+viewBuffer){
-                viewStart.y = Math.max(0,player.y-viewBuffer);
-            }
-            if(player.y>viewStart.y+viewSize.y-viewBuffer-1){
-                viewStart.y = Math.min(levelSize.y-viewSize.y,player.y+viewBuffer-viewSize.y+1);
-            }
+            fixView();
         }
     }
     else{
@@ -742,7 +865,9 @@ function gameFrame(){
     for(a=0;a<npc.length;a++){
         npc[a].update();
     }
-    drawPlay();
+    if(game.state.name==="play"){
+        drawPlay();
+    }
 }
 window.document.addEventListener("keydown",keyDownHandler);
 window.document.addEventListener("keyup",keyUpHandler);
@@ -754,10 +879,10 @@ ctx = cnvs.getContext("2d");
 ctx.textBaseline = "middle";
 ctx.textAlign = "center";
 ctx.lineWidth = 1.5;
-game = {state:{name:"play"}};
+game = {state:{name:"play"},level:0};
 player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},x:5,y:3,tillMove:0,moveCooldown:3,tillAction:0,actionCooldown:6};
 invMode = {mode:"remove",selection:0};
-space = 6; halfSpace = 5; quarterSpace = 4;
+space = 6; halfSpace = 5; quarterSpace = 4; doubleSpace = 3; center = {x:cnvs.width/2,y:cnvs.height/2};
 levelSize = {x:25,y:20};
 viewSize = {x:15,y:15};
 viewStart = {x:0,y:0};
@@ -782,6 +907,7 @@ for(x=0;x<levelSize.x;x++){
     }
 }
 map[3][5] = "tree"; map[3][6] = "tree"; map[2][6] = "tree"; map[1][6] = "tree";
+map[7][7] = "exit";
 map[3][2] = "gate"; mapProp[3][2] = {closed:true};
 map[3][3] = "gate"; mapProp[3][3] = {closed:false};
 item[1][0] = "axe"; item[2][0] = "bow"; item[3][0] = "fast"; item[4][0] = "meat";
