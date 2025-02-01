@@ -320,6 +320,8 @@ function drawPlayer(viewX,viewY){
     invHalfSpace = invSpace/2;
 }
 function drawPlay(){
+    ctx.lineWidth = 1;
+    ctx.font = "" + (halfSpace-4) + "px Arial";
     ctx.fillStyle = "black";
     ctx.fillRect(0,0,cnvs.width,cnvs.height);
     for(x=0;x<viewSize.x;x++){
@@ -510,7 +512,7 @@ function makeLevel(kind,feel){
                     }
                 }
             }
-            player.x = 1; player.y = 1; map[18][18] = "exit";
+            player.x = 1; player.y = 1; map[14][15] = "exit";
             break;
         case "forest":
             levelSize = {x:20,y:20};
@@ -534,6 +536,7 @@ function makeLevel(kind,feel){
             }
         }
     }
+    npc = [];
 }
 function drawLevelSelect(){
     ctx.lineWidth = 3;
@@ -595,22 +598,45 @@ function keyDownHandler(e){
             }
         }
         if(game.state.name==="levelSelect"){
-            switch(e.key){
-                case "1":
-                    player.runes = player.loadouts[0];
-                    break;
-                case "2":
-                    player.runes = player.loadouts[1];
-                    break;
-                case "3":
-                    player.runes = player.loadouts[2];
-                    break;
-                case "4":
-                    player.runes = player.loadouts[3];
-                    break;
+            if(["1","2","3","4"].includes(e.key)){
+                switch(e.key){
+                    case "1":
+                        player.runes = player.loadouts[0];
+                        break;
+                    case "2":
+                        player.runes = player.loadouts[1];
+                        break;
+                    case "3":
+                        player.runes = player.loadouts[2];
+                        break;
+                    case "4":
+                        player.runes = player.loadouts[3];
+                        break;
+                }
+                applyRunes();
+                drawLevelSelect();
             }
-            applyRunes();
-            drawLevelSelect();
+            if(["w","a","s","d"].includes(e.key)){
+                switch(e.key){  
+                    case "w":
+                        makeLevel(game.state.levelOption[0],[]);
+                        break;
+                    case "a":
+                    alert(game.state.levelOption[1])
+                        makeLevel(game.state.levelOption[1],[]);
+                        
+                        break;
+                    case "s":
+                        makeLevel(game.state.levelOption[2],[]);
+                        break;
+                    case "d":
+                        makeLevel(game.state.levelOption[3],[]);
+                        break;
+                }
+                game.state.name = "play";
+                fixView();
+                gameClock = setInterval(gameFrame,33);
+            }
         }
     }
 }
