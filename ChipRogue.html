@@ -180,11 +180,18 @@ function Spider(x,y){
                     for(tryMove=0;tryMove<startOption.length;tryMove++){
                         tryX = this.x+startOption[tryMove][0];
                         tryY = this.y+startOption[tryMove][1];
-                        if(isInBounds([tryX,tryY])&&!solidMask[tryX][tryY]){
-                            finalOption.push(startOption[tryMove]);
+                        if(isInBounds([tryX,tryY])){
+                            if(!solidMask[tryX][tryY]){
+                                finalOption.push(startOption[tryMove]);
+                            }
+                            if((player.x===tryX)&&(player.y===tryY)){
+                                takeDamage();
+                                this.tillMove = Math.floor(20+Math.random()*25);
+                                this.state = {name:"justAttacked"};
+                            }
                         }
                     }
-                    if(finalOption.length>0){
+                    if((finalOption.length>0)&&(this.state.name==="resting")){
                         this.state = {name:"transit",direction:finalOption[Math.floor(Math.random()*finalOption.length)]};
                     }
                     break;
@@ -202,11 +209,23 @@ function Spider(x,y){
                         this.state = {name:"resting"};
                         this.tillMove = Math.floor(20+Math.random()*25);
                     }
+                    break;
+                case "justAttacked":
+                    this.state = {name:"resting"};
             }
         }
         else{
             this.tillMove -= 1;
         }
+    }
+}
+function takeDamage(){
+    if(player.runes.includes("armor")){
+        expendItem("armor");
+    }
+    else{
+        player.health -= 1;
+        alert(player.health);
     }
 }
 function isInBounds(coordinate){
@@ -217,6 +236,7 @@ function isInBounds(coordinate){
 }
 function engToChi(english){
     switch(english){
+        case "armor": return "\u7532";
         case "ash": return "\u7070";
         case "axe": return "\u65A7";
         case "blink": return "\u7728";
@@ -259,25 +279,36 @@ function engToChi(english){
 }
 function matToColor(material){
     switch(material){
-        case "stone":
+        case "actionFill":
+            return "oklch(33.73% 0.1414 261.34)";
+        case "actionOutline":
+            return "oklch(67.46% 0.1414 261.34)";
         case "ash":
-            return "gray";
-        case "metal":
-            return "lightgray";
         case "fire":
+        case "healthOutline":
             return "red";
-        case "water":
-            return "cornflowerblue";
-        case "foliage":
-            return "lightgreen";
-        case "wood":
-            return "tan";
-        case "rune":
-            return "yellow";
-        case "meat":
-            return "hotpink";
         case "bone":
             return "white";
+        case "foliage":
+            return "lightgreen";
+        case "healthFill":
+            return "oklch(32.4% 0.2576 29.23)";
+        case "meat":
+            return "hotpink";
+        case "metal":
+            return "lightgray";
+        case "moveFill":
+            return "oklch(43.4% 0.1558 144.09)";
+        case "moveOutline":
+            return "oklch(86.8% 0.1558 144.09)";
+        case "rune":
+            return "yellow";
+        case "stone":
+            return "gray";
+        case "water":
+            return "cornflowerblue";
+        case "wood":
+            return "tan";
     }
 }
 function recalculateAfterResize(){
@@ -378,6 +409,10 @@ function drawPlay(){
                     break;
             }
             switch(item[lookupX][lookupY]){
+                case "armor":
+                    ctx.fillStyle = matToColor("metal");
+                    ctx.fillText(engToChi("armor"),drawX+halfSpace,drawY+halfSpace);
+                    break;
                 case "axe":
                     ctx.fillStyle = matToColor("metal");
                     ctx.fillText(engToChi("axe"),drawX+halfSpace,drawY+halfSpace);
@@ -622,9 +657,7 @@ function keyDownHandler(e){
                         makeLevel(game.state.levelOption[0],[]);
                         break;
                     case "a":
-                    alert(game.state.levelOption[1])
                         makeLevel(game.state.levelOption[1],[]);
-                        
                         break;
                     case "s":
                         makeLevel(game.state.levelOption[2],[]);
@@ -906,7 +939,11 @@ ctx.textBaseline = "middle";
 ctx.textAlign = "center";
 ctx.lineWidth = 1.5;
 game = {state:{name:"play"},level:0};
-player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},x:5,y:3,tillMove:0,moveCooldown:3,tillAction:0,actionCooldown:6};
+player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},
+    x:5,y:3,
+    tillMove:0,moveCooldown:3,
+    tillAction:0,actionCooldown:6,
+    health:3,healthMax:3};
 invMode = {mode:"remove",selection:0};
 space = 6; halfSpace = 5; quarterSpace = 4; doubleSpace = 3; center = {x:cnvs.width/2,y:cnvs.height/2};
 levelSize = {x:25,y:20};
@@ -938,6 +975,7 @@ map[3][2] = "gate"; mapProp[3][2] = {closed:true};
 map[3][3] = "gate"; mapProp[3][3] = {closed:false};
 item[1][0] = "axe"; item[2][0] = "bow"; item[3][0] = "fast"; item[4][0] = "meat";
 item[5][0] = "knife"; item[6][0] = "shield"; item[7][0] = "torch"; item[8][0] = "blink";
+item[4][1] = "armor";
 solidMask = [];
 for(x=0;x<levelSize.x;x++){
     solidMask[x] = [];
