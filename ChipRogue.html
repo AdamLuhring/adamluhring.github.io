@@ -519,6 +519,12 @@ function drawPause(){
     ctx.fillStyle = "white";
     ctx.fillText("Press 'P' to resume play.",cnvs.width/2,cnvs.height/2);
 }
+function drawMainMenu(){
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,cnvs.width,cnvs.height);
+    ctx.fillStyle = "white";
+    ctx.fillText("PRESS SPACE TO START",cnvs.width/2,cnvs.height/2);
+}
 function fixView(){
     if(player.x<viewStart.x+viewBuffer){
         viewStart.x = Math.max(0,player.x-viewBuffer);
@@ -548,6 +554,38 @@ function makeLevel(kind,feel){
                 }
             }
             player.x = 1; player.y = 1; map[14][15] = "exit";
+            npc = [];
+            break;
+        case "first":
+            levelSize = {x:25,y:20};
+            map = []; mapProp = []; item = []; solidMask = [];
+            for(a=0;a<levelSize.x;a++){
+                map[a] = []; mapProp[a] = []; item[a] = []; solidMask[a] = [];
+                for(b=0;b<levelSize.y;b++){
+                    map[a][b] = ""; mapProp[a][b] = {}; item[a][b] = null; solidMask[a][b] = false;
+                    if((a*5+b*3)%9===0){
+                        map[a][b] = "tree";
+                    }
+                    if((a*6+b*5)%13===0){
+                        map[a][b] = "wall";
+                    }
+                    if((a*9+b*8)%30===0){
+                        map[a][b] = "water";
+                    }
+                }
+            }
+            
+            map[3][5] = "tree"; map[3][6] = "tree"; map[2][6] = "tree"; map[1][6] = "tree";
+            map[7][7] = "exit";
+            map[3][2] = "gate"; mapProp[3][2] = {closed:true};
+            map[3][3] = "gate"; mapProp[3][3] = {closed:false};
+            item[1][0] = "axe"; item[2][0] = "bow"; item[3][0] = "fast"; item[4][0] = "meat";
+            item[5][0] = "knife"; item[6][0] = "shield"; item[7][0] = "torch"; item[8][0] = "blink";
+            item[4][1] = "armor";
+            
+            npc = [new Dog(8,8), new Skeleton(10,10), new Cockroach(14,3),
+                new Spider(12,11), new Spider(13,11), new Spider(14,11),
+                new Spider(12,12), new Spider(13,12), new Spider(14,12)];
             break;
         case "forest":
             levelSize = {x:20,y:20};
@@ -562,16 +600,26 @@ function makeLevel(kind,feel){
                 }
             }
             player.x = 1; player.y = 1; map[18][18] = "exit";
+            npc = [];
             break;
     }
+    
     for(a=0;a<levelSize.x;a++){
         for(b=0;b<levelSize.y;b++){
             if(["wall","tree"].includes(map[a][b])){
                 solidMask[a][b] = true;
             }
+            if((map[a][b]==="gate")&&(mapProp[a][b].closed)){
+                solidMask[a][b] = true;
+            }
+            if(map[a][b]==="tree"){
+                mapProp[a][b] = {heat:0};
+            }
         }
     }
-    npc = [];
+    for(a=0;a<npc.length;a++){
+        solidMask[npc[a].x][npc[a].y] = true;
+    }
 }
 function drawLevelSelect(){
     ctx.lineWidth = 3;
@@ -670,6 +718,9 @@ function keyDownHandler(e){
                 fixView();
                 gameClock = setInterval(gameFrame,33);
             }
+        }
+        if(game.state.name==="mainMenu"){
+            newGame();
         }
     }
 }
@@ -928,80 +979,37 @@ function gameFrame(){
         drawPlay();
     }
 }
+function newGame(){
+    player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},
+        x:5,y:3,
+        tillMove:0,moveCooldown:3,
+        tillAction:0,actionCooldown:6,
+        health:3,healthMax:3};
+    player.runes = player.loadouts[0]; applyRunes();
+    makeLevel("first",[]);
+    game.state = {name:"play",level:0};
+    fixView();
+    gameClock = setInterval(gameFrame,33);
+}
 window.document.addEventListener("keydown",keyDownHandler);
 window.document.addEventListener("keyup",keyUpHandler);
 window.document.addEventListener("click",clickHandler);
 keyTrack = [];
-cnvs = document.getElementById("theCanvas");
-cnvs.focus();
-ctx = cnvs.getContext("2d");
-ctx.textBaseline = "middle";
-ctx.textAlign = "center";
-ctx.lineWidth = 1.5;
-game = {state:{name:"play"},level:0};
-player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},
-    x:5,y:3,
-    tillMove:0,moveCooldown:3,
-    tillAction:0,actionCooldown:6,
-    health:3,healthMax:3};
-invMode = {mode:"remove",selection:0};
+cnvs = document.getElementById("theCanvas"); cnvs.focus(); ctx = cnvs.getContext("2d");
+ctx.textBaseline = "middle"; ctx.textAlign = "center"; ctx.lineWidth = 1.5;
 space = 6; halfSpace = 5; quarterSpace = 4; doubleSpace = 3; center = {x:cnvs.width/2,y:cnvs.height/2};
-levelSize = {x:25,y:20};
+viewBuffer = 5;
+invMode = {mode:"remove",selection:0};
 viewSize = {x:15,y:15};
 viewStart = {x:0,y:0};
-viewBuffer = 5;
-map = []; mapProp = [];
-item = [];
-for(x=0;x<levelSize.x;x++){
-    map[x] = []; mapProp[x] = [];
-    item[x] = [];
-    for(y=0;y<levelSize.y;y++){
-        map[x][y] = "grass"; mapProp[x][y] = {};
-        if((x*5+y*3)%9===0){
-            map[x][y] = "tree";
-        }
-        if((x*6+y*5)%13===0){
-            map[x][y] = "wall";
-        }
-        if((x*9+y*8)%30===0){
-            map[x][y] = "water";
-        }
-        item[x][y] = null;
-    }
-}
-map[3][5] = "tree"; map[3][6] = "tree"; map[2][6] = "tree"; map[1][6] = "tree";
-map[7][7] = "exit";
-map[3][2] = "gate"; mapProp[3][2] = {closed:true};
-map[3][3] = "gate"; mapProp[3][3] = {closed:false};
-item[1][0] = "axe"; item[2][0] = "bow"; item[3][0] = "fast"; item[4][0] = "meat";
-item[5][0] = "knife"; item[6][0] = "shield"; item[7][0] = "torch"; item[8][0] = "blink";
-item[4][1] = "armor";
-solidMask = [];
-for(x=0;x<levelSize.x;x++){
-    solidMask[x] = [];
-    for(y=0;y<levelSize.y;y++){
-        if(["tree","wall"].includes(map[x][y])){
-            solidMask[x][y] = true;
-        }
-        else{
-            solidMask[x][y] = false;
-        }
-        if((map[x][y]==="gate")&&(mapProp[x][y].closed)){
-            solidMask[x][y] = true;
-        }
-        if(map[x][y]==="tree"){
-            mapProp[x][y] = {heat:0};
-        }
-    }
-}
-player.runes = player.loadouts[0]; applyRunes();
-npc = [new Dog(8,8), new Skeleton(10,10), new Cockroach(14,3),
-    new Spider(12,11), new Spider(13,11), new Spider(14,11),
-    new Spider(12,12), new Spider(13,12), new Spider(14,12)];
-for(a=0;a<npc.length;a++){
-    solidMask[npc[a].x][npc[a].y] = true;
-}
+game = {state:{name:"mainMenu"}};
+player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},
+        x:5,y:3,
+        tillMove:0,moveCooldown:3,
+        tillAction:0,actionCooldown:6,
+        health:3,healthMax:3};
+gameClock = null;
 recalculateAfterResize();
-gameClock = setInterval(gameFrame,33);
+drawMainMenu();
 </script>
 </html>
