@@ -225,7 +225,11 @@ function takeDamage(){
     }
     else{
         player.health -= 1;
-        alert(player.health);
+        if(player.health<=0){
+            clearInterval(gameClock);
+            game.state.name = "gameOver";
+            drawGameOver();
+        }
     }
 }
 function isInBounds(coordinate){
@@ -519,6 +523,12 @@ function drawPause(){
     ctx.fillStyle = "white";
     ctx.fillText("Press 'P' to resume play.",cnvs.width/2,cnvs.height/2);
 }
+function drawGameOver(){
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,cnvs.width,cnvs.height);
+    ctx.fillStyle = "white";
+    ctx.fillText("GAME OVER (press space for main menu)",cnvs.width/2,cnvs.height/2);
+}
 function drawMainMenu(){
     ctx.fillStyle = "black";
     ctx.fillRect(0,0,cnvs.width,cnvs.height);
@@ -721,6 +731,10 @@ function keyDownHandler(e){
         }
         if(game.state.name==="mainMenu"){
             newGame();
+        }
+        if(game.state.name==="gameOver"){
+            game.state.name = "mainMenu";
+            drawMainMenu();
         }
     }
 }
@@ -1003,12 +1017,6 @@ invMode = {mode:"remove",selection:0};
 viewSize = {x:15,y:15};
 viewStart = {x:0,y:0};
 game = {state:{name:"mainMenu"}};
-player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},
-        x:5,y:3,
-        tillMove:0,moveCooldown:3,
-        tillAction:0,actionCooldown:6,
-        health:3,healthMax:3};
-gameClock = null;
 recalculateAfterResize();
 drawMainMenu();
 </script>
