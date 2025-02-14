@@ -288,6 +288,8 @@ function matToColor(material){
         case "actionOutline":
             return "oklch(67.46% 0.1414 261.34)";
         case "ash":
+        case "stone":
+            return "gray";
         case "fire":
         case "healthOutline":
             return "red";
@@ -307,8 +309,6 @@ function matToColor(material){
             return "oklch(86.8% 0.1558 144.09)";
         case "rune":
             return "yellow";
-        case "stone":
-            return "gray";
         case "water":
             return "cornflowerblue";
         case "wood":
@@ -622,7 +622,7 @@ function makeLevel(kind,feel){
             if((map[a][b]==="gate")&&(mapProp[a][b].closed)){
                 solidMask[a][b] = true;
             }
-            if(map[a][b]==="tree"){
+            if(["tree","gate"].includes(map[a][b])){
                 mapProp[a][b] = {heat:0};
             }
         }
@@ -912,7 +912,7 @@ function gameFrame(){
                 }
             }
             if(player.runes.includes("torch")){
-                if(map[player.x+actionX][player.y+actionY]==="tree"){
+                if(["tree","gate"].includes(map[player.x+actionX][player.y+actionY])){
                     map[player.x+actionX][player.y+actionY] = "fire";
                     mapProp[player.x+actionX][player.y+actionY] = {burnLeft:20};
                     solidMask[player.x+actionX][player.y+actionY] = false;
