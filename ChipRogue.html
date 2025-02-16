@@ -299,6 +299,8 @@ function matToColor(material){
             return "lightgreen";
         case "healthFill":
             return "oklch(32.4% 0.2576 29.23)";
+        case "ice":
+            return "white";
         case "meat":
             return "hotpink";
         case "metal":
@@ -394,6 +396,10 @@ function drawPlay(){
                         ctx.strokeStyle = matToColor("wood");
                         ctx.strokeRect(drawX,drawY,space,space);
                     }
+                    break;
+                case "ice":
+                    ctx.fillStyle = matToColor("ice");
+                    ctx.fillText(engToChi("ice"),drawX+halfSpace,drawY+halfSpace);
                     break;
                 case "tree":
                     ctx.strokeStyle = matToColor("foliage");
@@ -584,15 +590,15 @@ function makeLevel(kind,feel){
                     }
                 }
             }
-            
             map[3][5] = "tree"; map[3][6] = "tree"; map[2][6] = "tree"; map[1][6] = "tree";
             map[7][7] = "exit";
             map[3][2] = "gate"; mapProp[3][2] = {closed:true};
             map[3][3] = "gate"; mapProp[3][3] = {closed:false};
+            map[1][1] = "ice"; map[1][2] = "ice";
             item[1][0] = "axe"; item[2][0] = "bow"; item[3][0] = "fast"; item[4][0] = "meat";
             item[5][0] = "knife"; item[6][0] = "shield"; item[7][0] = "torch"; item[8][0] = "blink";
             item[4][1] = "armor";
-            
+            player.x = 5; player.y = 3;
             npc = [new Dog(8,8), new Skeleton(10,10), new Cockroach(14,3),
                 new Spider(12,11), new Spider(13,11), new Spider(14,11),
                 new Spider(12,12), new Spider(13,12), new Spider(14,12)];
@@ -623,7 +629,7 @@ function makeLevel(kind,feel){
                 solidMask[a][b] = true;
             }
             if(["tree","gate"].includes(map[a][b])){
-                mapProp[a][b] = {heat:0};
+                mapProp[a][b].heat = 0;
             }
         }
     }
@@ -816,56 +822,73 @@ function expendItem(toExpend){
 function gameFrame(){
     moveKeys = [keyTrack.indexOf("w"),keyTrack.indexOf("a"),keyTrack.indexOf("s"),keyTrack.indexOf("d")];
     if(player.tillMove===0){
-        if(!moveKeys.every((element) => element === -1)){
-            recentMoveIndex = moveKeys.indexOf(Math.max(...moveKeys));
-            possibleMove = [[0,-1],[-1,0],[0,1],[1,0]];
-            if(player.runes.includes("blink")){
-                tryX = player.x;
-                tryY = player.y;
-                while(isInBounds([tryX+possibleMove[recentMoveIndex][0],tryY+possibleMove[recentMoveIndex][1]])){
-                    if(!solidMask[tryX+possibleMove[recentMoveIndex][0]][tryY+possibleMove[recentMoveIndex][1]]){
-                        tryX += possibleMove[recentMoveIndex][0];
-                        tryY += possibleMove[recentMoveIndex][1];
-                    }
-                    else{
-                        break;
-                    }
-                }
-                solidMask[player.x][player.y] = false;
-                player.x = tryX;
-                player.y = tryY;
-                solidMask[player.x][player.y] = true;
-                player.tillMove = player.moveCooldown;
-            }
-            else{
-                tryX = player.x + possibleMove[recentMoveIndex][0];
-                tryY = player.y + possibleMove[recentMoveIndex][1];
-                if(isInBounds([tryX,tryY])){
-                    if(!solidMask[tryX][tryY]){
-                        solidMask[player.x][player.y] = false;
-                        player.x = tryX;
-                        player.y = tryY;
-                        solidMask[player.x][player.y] = true;
-                        player.tillMove = player.moveCooldown;
-                    }
+        if(["ice"].includes(map[player.x][player.y])){
+            tryX = player.x + player.recentMove.x;
+            tryY = player.y + player.recentMove.y;
+            if(isInBounds([tryX,tryY])){
+                if(!solidMask[tryX][tryY]){
+                    solidMask[player.x][player.y] = false;
+                    player.x = tryX;
+                    player.y = tryY;
+                    solidMask[player.x][player.y] = true;
+                    player.tillMove = player.moveCooldown;
                 }
             }
-            if(map[player.x][player.y]==="exit"){
-                game.state.name = "levelSelect";
-                game.state.levelOption = ["forest","building","forest","building"];
-                clearInterval(gameClock);
-                drawLevelSelect();
-            }
-            if(item[player.x][player.y]!==null){
-                if(player.inventory.hasOwnProperty(item[player.x][player.y])){
-                    player.inventory[item[player.x][player.y]] += 1;
+        }
+        else{
+            if(!moveKeys.every((element) => element === -1)){
+                recentMoveIndex = moveKeys.indexOf(Math.max(...moveKeys));
+                possibleMove = [[0,-1],[-1,0],[0,1],[1,0]];
+                if(player.runes.includes("blink")){
+                    tryX = player.x;
+                    tryY = player.y;
+                    while(isInBounds([tryX+possibleMove[recentMoveIndex][0],tryY+possibleMove[recentMoveIndex][1]])){
+                        if(!solidMask[tryX+possibleMove[recentMoveIndex][0]][tryY+possibleMove[recentMoveIndex][1]]){
+                            tryX += possibleMove[recentMoveIndex][0];
+                            tryY += possibleMove[recentMoveIndex][1];
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    solidMask[player.x][player.y] = false;
+                    player.x = tryX;
+                    player.y = tryY;
+                    solidMask[player.x][player.y] = true;
+                    player.tillMove = player.moveCooldown;
                 }
                 else{
-                    player.inventory[item[player.x][player.y]] = 1;
+                    tryX = player.x + possibleMove[recentMoveIndex][0];
+                    tryY = player.y + possibleMove[recentMoveIndex][1];
+                    if(isInBounds([tryX,tryY])){
+                        if(!solidMask[tryX][tryY]){
+                            solidMask[player.x][player.y] = false;
+                            player.x = tryX;
+                            player.y = tryY;
+                            solidMask[player.x][player.y] = true;
+                            player.tillMove = player.moveCooldown;
+                            player.recentMove.x = possibleMove[recentMoveIndex][0];
+                            player.recentMove.y = possibleMove[recentMoveIndex][1];
+                        }
+                    }
                 }
-                item[player.x][player.y] = null;
+                if(map[player.x][player.y]==="exit"){
+                    game.state.name = "levelSelect";
+                    game.state.levelOption = ["forest","building","forest","building"];
+                    clearInterval(gameClock);
+                    drawLevelSelect();
+                }
+                if(item[player.x][player.y]!==null){
+                    if(player.inventory.hasOwnProperty(item[player.x][player.y])){
+                        player.inventory[item[player.x][player.y]] += 1;
+                    }
+                    else{
+                        player.inventory[item[player.x][player.y]] = 1;
+                    }
+                    item[player.x][player.y] = null;
+                }
+                fixView();
             }
-            fixView();
         }
     }
     else{
@@ -913,8 +936,16 @@ function gameFrame(){
             }
             if(player.runes.includes("torch")){
                 if(["tree","gate"].includes(map[player.x+actionX][player.y+actionY])){
+                    
+                    switch(map[player.x+actionX][player.y+actionY]){
+                        case "tree":
+                            mapProp[player.x+actionX][player.y+actionY] = {burnLeft:22};
+                            break;
+                        case "gate":
+                            mapProp[player.x+actionX][player.y+actionY] = {burnLeft:18};
+                            break;
+                    }
                     map[player.x+actionX][player.y+actionY] = "fire";
-                    mapProp[player.x+actionX][player.y+actionY] = {burnLeft:20};
                     solidMask[player.x+actionX][player.y+actionY] = false;
                     player.tillAction = player.actionCooldown;
                 }
@@ -996,7 +1027,7 @@ function gameFrame(){
 function newGame(){
     player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},
         x:5,y:3,
-        tillMove:0,moveCooldown:3,
+        tillMove:0,moveCooldown:3,recentMove:{x:0,y:0},
         tillAction:0,actionCooldown:6,
         health:3,healthMax:3};
     player.runes = player.loadouts[0]; applyRunes();
