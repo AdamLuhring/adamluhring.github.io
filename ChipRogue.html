@@ -594,7 +594,7 @@ function makeLevel(kind,feel){
             map[7][7] = "exit";
             map[3][2] = "gate"; mapProp[3][2] = {closed:true};
             map[3][3] = "gate"; mapProp[3][3] = {closed:false};
-            map[1][1] = "ice"; map[1][2] = "ice";
+            map[1][1] = "ice"; map[1][2] = "ice"; map[1][3] = "ice";
             item[1][0] = "axe"; item[2][0] = "bow"; item[3][0] = "fast"; item[4][0] = "meat";
             item[5][0] = "knife"; item[6][0] = "shield"; item[7][0] = "torch"; item[8][0] = "blink";
             item[4][1] = "armor";
@@ -822,7 +822,7 @@ function expendItem(toExpend){
 function gameFrame(){
     moveKeys = [keyTrack.indexOf("w"),keyTrack.indexOf("a"),keyTrack.indexOf("s"),keyTrack.indexOf("d")];
     if(player.tillMove===0){
-        if(["ice"].includes(map[player.x][player.y])){
+        if(["ice"].includes(map[player.x][player.y])&&!player.inControl){
             tryX = player.x + player.recentMove.x;
             tryY = player.y + player.recentMove.y;
             if(isInBounds([tryX,tryY])){
@@ -832,6 +832,9 @@ function gameFrame(){
                     player.y = tryY;
                     solidMask[player.x][player.y] = true;
                     player.tillMove = player.moveCooldown;
+                }
+                else{
+                    player.inControl = true;
                 }
             }
         }
@@ -869,6 +872,9 @@ function gameFrame(){
                             player.tillMove = player.moveCooldown;
                             player.recentMove.x = possibleMove[recentMoveIndex][0];
                             player.recentMove.y = possibleMove[recentMoveIndex][1];
+                            if(map[player.x][player.y]==="ice"){
+                                player.inControl = false;
+                            }
                         }
                     }
                 }
@@ -1027,7 +1033,7 @@ function gameFrame(){
 function newGame(){
     player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},
         x:5,y:3,
-        tillMove:0,moveCooldown:3,recentMove:{x:0,y:0},
+        tillMove:0,moveCooldown:3,recentMove:{x:0,y:0},inControl:true,
         tillAction:0,actionCooldown:6,
         health:3,healthMax:3};
     player.runes = player.loadouts[0]; applyRunes();
