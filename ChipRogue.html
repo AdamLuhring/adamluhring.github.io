@@ -171,7 +171,7 @@ function Spider(x,y){
     solidMask[this.x][this.y] = true;
     this.tillMove = Math.floor(60+Math.random()*30);
     this.state = {name:"resting"};
-    this.health = 1;
+    this.health = 3;
     this.update = function(){
         if(this.tillMove===0){
             switch(this.state.name){
@@ -221,7 +221,8 @@ function Spider(x,y){
     }
     this.takeDamage = function(damageToTake){
         this.health -= damageToTake;
-        if(!this.health>0){
+        if(!(this.health>0)){
+            solidMask[this.x][this.y] = false;
             npc.splice(npc.indexOf(this),1);
         }
     }
@@ -1045,7 +1046,7 @@ function gameFrame(){
     }
 }
 function newGame(){
-    player = {runes:[],loadouts:[["hand","fast"],[],[],[]],inventory:{"hand":1,"fast":2},
+    player = {runes:[],loadouts:[["knife","fast"],[],[],[]],inventory:{"hand":1,"fast":2},
         x:5,y:3,
         tillMove:0,moveCooldown:3,recentMove:{x:0,y:0},inControl:true,
         tillAction:0,actionCooldown:6,
