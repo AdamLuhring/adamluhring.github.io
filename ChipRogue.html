@@ -171,6 +171,7 @@ function Spider(x,y){
     solidMask[this.x][this.y] = true;
     this.tillMove = Math.floor(60+Math.random()*30);
     this.state = {name:"resting"};
+    this.health = 1;
     this.update = function(){
         if(this.tillMove===0){
             switch(this.state.name){
@@ -216,6 +217,12 @@ function Spider(x,y){
         }
         else{
             this.tillMove -= 1;
+        }
+    }
+    this.takeDamage = function(damageToTake){
+        this.health -= damageToTake;
+        if(!this.health>0){
+            npc.splice(npc.indexOf(this),1);
         }
     }
 }
@@ -938,6 +945,13 @@ function gameFrame(){
                     mapProp[player.x+actionX][player.y+actionY].closed = !mapProp[player.x+actionX][player.y+actionY].closed;
                     solidMask[player.x+actionX][player.y+actionY] = !solidMask[player.x+actionX][player.y+actionY];
                     player.tillAction = player.actionCooldown;
+                }
+            }
+            if(player.runes.includes("knife")){
+                for(a=0;a<npc.length;a++){
+                    if((npc[a].x===player.x+actionX)&&(npc[a].y===player.y+actionY)){
+                        npc[a].takeDamage(1);
+                    }
                 }
             }
             if(player.runes.includes("torch")){
