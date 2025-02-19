@@ -14,6 +14,7 @@ function Cockroach(x,y){
     this.x = x; this.y = y;
     this.tillMove = 0; this.moveCooldown = 5;
     this.state = {facing:"right",spin:"c"};
+    this.health = 2;
     this.update = function(){
         if(this.tillMove===0){
             movePreference = []; moveName = [];
@@ -54,12 +55,20 @@ function Cockroach(x,y){
             this.tillMove -= 1;
         }
     };
+    this.takeDamage = function(damageToTake){
+        this.health -= damageToTake;
+        if(!(this.health>0)){
+            solidMask[this.x][this.y] = false;
+            npc.splice(npc.indexOf(this),1);
+        }
+    }
 }
 function Dog(x,y){
     this.x = x; this.y = y;
     this.fed = 0;
     this.tillMove = 0;
     this.state = {name:"spurred",exhaustion:0,moveCounts:[2,3,6,8,24]};
+    this.health = 3;
     this.randomMove = function(){
         movePreference = [[0,-1],[-1,0],[0,1],[1,0]];
         for(currentIndex=movePreference.length-1;currentIndex>-1;currentIndex--){
@@ -110,11 +119,19 @@ function Dog(x,y){
             this.tillMove -= 1;
         }
     }
+    this.takeDamage = function(damageToTake){
+        this.health -= damageToTake;
+        if(!(this.health>0)){
+            solidMask[this.x][this.y] = false;
+            npc.splice(npc.indexOf(this),1);
+        }
+    }
 }
 function Skeleton(x,y){
     this.x = x; this.y = y;
     this.tillMove = 0; this.moveCooldown = 10;
     this.state = {name:"dormant"};
+    this.health = 1;
     this.update = function(){
         switch(this.state.name){
             case "dormant":
@@ -165,13 +182,20 @@ function Skeleton(x,y){
                 break;
         }
     }
+    this.takeDamage = function(damageToTake){
+        this.health -= damageToTake;
+        if(!(this.health>0)){
+            solidMask[this.x][this.y] = false;
+            npc.splice(npc.indexOf(this),1);
+        }
+    }
 }
 function Spider(x,y){
     this.x = x; this.y = y;
     solidMask[this.x][this.y] = true;
     this.tillMove = Math.floor(60+Math.random()*30);
     this.state = {name:"resting"};
-    this.health = 3;
+    this.health = 2;
     this.update = function(){
         if(this.tillMove===0){
             switch(this.state.name){
@@ -918,61 +942,61 @@ function gameFrame(){
     if(player.tillAction===0){
         if(!actionKeys.every((element) => element === -1)){
             recentActionIndex = actionKeys.indexOf(Math.max(...actionKeys));
-            actionX = 0; actionY = 0;
+            action = {x:player.x,y:player.y};
             switch(recentActionIndex){
                 case 0:
-                    actionY = -1;
+                    action.y--;
                     break;
                 case 1:
-                    actionX = -1;
+                    action.x--;
                     break;
                 case 2:
-                    actionY = 1;
+                    action.y++;
                     break;
                 case 3:
-                    actionX = 1;
+                    action.x++;
                     break;
             }
             if(player.runes.includes("axe")){
-                if(["tree","gate"].includes(map[player.x+actionX][player.y+actionY])){
-                    map[player.x+actionX][player.y+actionY] = "grass";
-                    mapProp[player.x+actionX][player.y+actionY] = {};
-                    solidMask[player.x+actionX][player.y+actionY] = false;
+                if(["tree","gate"].includes(map[action.x][action.y])){
+                    map[action.x][action.y] = "grass";
+                    mapProp[action.x][action.y] = {};
+                    solidMask[action.x][action.y] = false;
                     player.tillAction = player.actionCooldown;
                 }
             }
             if(player.runes.includes("hand")){
-                if(map[player.x+actionX][player.y+actionY]==="gate"){
-                    mapProp[player.x+actionX][player.y+actionY].closed = !mapProp[player.x+actionX][player.y+actionY].closed;
-                    solidMask[player.x+actionX][player.y+actionY] = !solidMask[player.x+actionX][player.y+actionY];
+                if(map[action.x][action.y]==="gate"){
+                    mapProp[action.x][action.y].closed = !mapProp[action.x][action.y].closed;
+                    solidMask[action.x][action.y] = !solidMask[action.x][action.y];
                     player.tillAction = player.actionCooldown;
                 }
             }
             if(player.runes.includes("knife")){
                 for(a=0;a<npc.length;a++){
-                    if((npc[a].x===player.x+actionX)&&(npc[a].y===player.y+actionY)){
+                    if((npc[a].x===action.x)&&(npc[a].y===action.y)){
                         npc[a].takeDamage(1);
                     }
                 }
             }
             if(player.runes.includes("torch")){
-                if(["tree","gate"].includes(map[player.x+actionX][player.y+actionY])){
+                if(["tree","gate"].includes(map[action.x][action.y])){
                     
-                    switch(map[player.x+actionX][player.y+actionY]){
+                    switch(map[action.x][action.y]){
                         case "tree":
-                            mapProp[player.x+actionX][player.y+actionY] = {burnLeft:22};
+                            mapProp[action.x][action.y] = {burnLeft:22};
                             break;
                         case "gate":
-                            mapProp[player.x+actionX][player.y+actionY] = {burnLeft:18};
+                            mapProp[action.x][action.y] = {burnLeft:18};
                             break;
                     }
-                    map[player.x+actionX][player.y+actionY] = "fire";
-                    solidMask[player.x+actionX][player.y+actionY] = false;
+                    map[action.x][action.y] = "fire";
+                    solidMask[action.x][action.y] = false;
                     player.tillAction = player.actionCooldown;
                 }
             }
             if(player.runes.includes("meat")){
-                match = npc.findIndex(test => ((test.x===player.x+actionX)&&(test.y===player.y+actionY)));
+                match = npc.findIndex(test => ((test.x===action.x)&&(test.y===action.y)));
                 if(match>-1){
                     npc[match].fed += 1;
                     expendItem("meat");
