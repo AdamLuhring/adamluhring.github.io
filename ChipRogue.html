@@ -978,6 +978,7 @@ function gameFrame(){
                         npc[a].takeDamage(1);
                     }
                 }
+                player.tillAction = player.actionCooldown;
             }
             if(player.runes.includes("torch")){
                 if(["tree","gate"].includes(map[action.x][action.y])){
