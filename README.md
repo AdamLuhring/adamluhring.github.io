@@ -9,5 +9,6 @@ Plans include:
 - Quality of life improvements (journal to look up meaning of observed symbols, improvements to loadout-modding UI)
 - Regular and special endings
 - Domesticating dog
+
 Known bugs:
 - Enemies unaffected by ice
