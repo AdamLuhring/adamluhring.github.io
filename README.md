@@ -1,5 +1,4 @@
 # ChipRogue
-## Introduction
 ChipRogue (working title) is a tile-based roguelite game in early development. It can be accessed [here](https://adamluhring.github.io/ChipRogue.html), with controls listed on the same page.
 ## Roadmap
 Plans include:
