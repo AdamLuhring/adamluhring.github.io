@@ -873,14 +873,14 @@ function gameFrame(){
         else{
             if(!moveKeys.every((element) => element === -1)){
                 recentMoveIndex = moveKeys.indexOf(Math.max(...moveKeys));
-                possibleMove = [[0,-1],[-1,0],[0,1],[1,0]];
+                moveDirection = [{x:0,y:-1},{x:-1,y:0},{x:0,y:1},{x:1,y:0}].at(recentMoveIndex);
                 if(player.runes.includes("blink")){
                     tryX = player.x;
                     tryY = player.y;
-                    while(isInBounds([tryX+possibleMove[recentMoveIndex][0],tryY+possibleMove[recentMoveIndex][1]])){
-                        if(!solidMask[tryX+possibleMove[recentMoveIndex][0]][tryY+possibleMove[recentMoveIndex][1]]){
-                            tryX += possibleMove[recentMoveIndex][0];
-                            tryY += possibleMove[recentMoveIndex][1];
+                    while(isInBounds([tryX+moveDirection.x,tryY+moveDirection.y])){
+                        if(!solidMask[tryX+moveDirection.x][tryY+moveDirection.y]){
+                            tryX += moveDirection.x;
+                            tryY += moveDirection.y;
                         }
                         else{
                             break;
@@ -893,8 +893,8 @@ function gameFrame(){
                     player.tillMove = player.moveCooldown;
                 }
                 else{
-                    tryX = player.x + possibleMove[recentMoveIndex][0];
-                    tryY = player.y + possibleMove[recentMoveIndex][1];
+                    tryX = player.x + moveDirection.x;
+                    tryY = player.y + moveDirection.y;
                     if(isInBounds([tryX,tryY])){
                         if(!solidMask[tryX][tryY]){
                             solidMask[player.x][player.y] = false;
@@ -902,8 +902,8 @@ function gameFrame(){
                             player.y = tryY;
                             solidMask[player.x][player.y] = true;
                             player.tillMove = player.moveCooldown;
-                            player.recentMove.x = possibleMove[recentMoveIndex][0];
-                            player.recentMove.y = possibleMove[recentMoveIndex][1];
+                            player.recentMove.x = moveDirection.x;
+                            player.recentMove.y = moveDirection.y;
                             if(map[player.x][player.y]==="ice"){
                                 player.inControl = false;
                             }
@@ -1014,43 +1014,18 @@ function gameFrame(){
             if(map[x][y]==="fire"){
                 if(mapProp[x][y].burnLeft>0){
                     mapProp[x][y].burnLeft -= 1;
-                    if(y-1>-1){
-                        if(mapProp[x][y-1].hasOwnProperty("heat")){
-                            if(mapProp[x][y-1].heat===8){
-                                map[x][y-1] = "fire"; mapProp[x][y-1] = {burnLeft:20};
-                            }
-                            else{
-                                mapProp[x][y-1].heat += 1;
-                            }
-                        }
-                    }
-                    if(x-1>-1){
-                        if(mapProp[x-1][y].hasOwnProperty("heat")){
-                            if(mapProp[x-1][y].heat===8){
-                                map[x-1][y] = "fire"; mapProp[x-1][y] = {burnLeft:20};
-                            }
-                            else{
-                                mapProp[x-1][y].heat += 1;
-                            }
-                        }
-                    }
-                    if(y+1<levelSize.y-1){
-                        if(mapProp[x][y+1].hasOwnProperty("heat")){
-                            if(mapProp[x][y+1].heat===8){
-                                map[x][y+1] = "fire"; mapProp[x][y+1] = {burnLeft:20};
-                            }
-                            else{
-                                mapProp[x][y+1].heat += 1;
-                            }
-                        }
-                    }
-                    if(x+1<levelSize.x-1){
-                        if(mapProp[x+1][y].hasOwnProperty("heat")){
-                            if(mapProp[x+1][y].heat===8){
-                                map[x+1][y] = "fire"; mapProp[x+1][y] = {burnLeft:20};
-                            }
-                            else{
-                                mapProp[x+1][y].heat += 1;
+                    neighbors = [{x:0,y:-1},{x:-1,y:0},{x:0,y:1},{x:1,y:0}];
+                    for(a=0;a<neighbors.length;a++){
+                        tryX = x+neighbors[a].x;
+                        tryY = y+neighbors[a].y;
+                        if(isInBounds([tryX,tryY])){
+                            if(mapProp[tryX][tryY].hasOwnProperty("heat")){
+                                if(mapProp[tryX][tryY].heat===8){
+                                    map[tryX][tryY] = "fire"; mapProp[tryX][tryY] = {burnLeft:20};
+                                }
+                                else{
+                                    mapProp[tryX][tryY].heat += 1;
+                                }
                             }
                         }
                     }
