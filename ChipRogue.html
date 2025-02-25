@@ -91,6 +91,9 @@ function Dog(x,y){
     }
     this.update = function(){
         if(this.tillMove===0){
+            if(this.fed>2){
+                this.state = {name:"domesticated"};
+            }
             switch(this.state.name){
                 case "spurred":
                     if(this.state.exhaustion<this.state.moveCounts.length){
@@ -112,6 +115,10 @@ function Dog(x,y){
                     this.tillMove = 30+Math.floor(Math.random()*30);
                     if(Math.random()>.6){
                         this.state = {name:"spurred",exhaustion:0,moveCounts:[2,4,6,12,24]};
+                    }
+                case "domesticated":
+                    for(testTarget=0;testTarget<npc.length;testTarget++){
+
                     }
             }
         }
@@ -975,7 +982,9 @@ function gameFrame(){
             if(player.runes.includes("knife")){
                 for(a=0;a<npc.length;a++){
                     if((npc[a].x===action.x)&&(npc[a].y===action.y)){
-                        npc[a].takeDamage(1);
+                        if(Object.getPrototypeOf(npc[a]).constructor.name!=="dog"){
+                            npc[a].takeDamage(1);
+                        }
                     }
                 }
                 player.tillAction = player.actionCooldown;
@@ -1046,7 +1055,7 @@ function gameFrame(){
     }
 }
 function newGame(){
-    player = {runes:[],loadouts:[["knife","fast"],[],[],[]],inventory:{"hand":1,"fast":2},
+    player = {runes:[],loadouts:[["knife","fast","meat"],[],[],[]],inventory:{"hand":1,"fast":2,"meat":3},
         x:5,y:3,
         tillMove:0,moveCooldown:3,recentMove:{x:0,y:0},inControl:true,
         tillAction:0,actionCooldown:6,
