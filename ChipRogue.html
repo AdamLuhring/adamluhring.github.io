@@ -982,7 +982,7 @@ function gameFrame(){
             if(player.runes.includes("knife")){
                 for(a=0;a<npc.length;a++){
                     if((npc[a].x===action.x)&&(npc[a].y===action.y)){
-                        if(Object.getPrototypeOf(npc[a]).constructor.name!=="dog"){
+                        if(["Spider","Skeleton","Cockroach"].includes(Object.getPrototypeOf(npc[a]).constructor.name)){
                             npc[a].takeDamage(1);
                         }
                     }
@@ -990,8 +990,7 @@ function gameFrame(){
                 player.tillAction = player.actionCooldown;
             }
             if(player.runes.includes("torch")){
-                if(["tree","gate"].includes(map[action.x][action.y])){
-                    
+                if(["tree","gate"].includes(map[action.x][action.y])){ 
                     switch(map[action.x][action.y]){
                         case "tree":
                             mapProp[action.x][action.y] = {burnLeft:22};
@@ -1008,9 +1007,11 @@ function gameFrame(){
             if(player.runes.includes("meat")){
                 match = npc.findIndex(test => ((test.x===action.x)&&(test.y===action.y)));
                 if(match>-1){
-                    npc[match].fed += 1;
-                    expendItem("meat");
-                    player.tillAction = player.actionCooldown;
+                    if(["Dog"].includes(Object.getPrototypeOf(npc[a]).constructor.name)){
+                        npc[match].fed += 1;
+                        expendItem("meat");
+                        player.tillAction = player.actionCooldown;
+                    }
                 }
             }
         }
