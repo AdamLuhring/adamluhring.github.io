@@ -36,17 +36,32 @@ function Cockroach(x,y){
                     moveName = ["down","right","up","left"];
                     break;
             }
-            for(tryMove=0;tryMove<movePreference.length;tryMove++){
-                tryX = this.x+movePreference[tryMove][0];
-                tryY = this.y+movePreference[tryMove][1];
-                if(isInBounds([tryX,tryY])){
-                    if(!solidMask[tryX][tryY]){
-                        solidMask[this.x][this.y] = false;
-                        this.x = tryX; this.y = tryY;
-                        solidMask[this.x][this.y] = true;
-                        this.state.facing = moveName[tryMove];
-                        this.tillMove = this.moveCooldown;
-                        break;
+            slipped = false;
+            if(map[this.x][this.y]==="ice"){
+                tryX = this.x+movePreference[1][0];
+                tryY = this.y+movePreference[1][1];
+                if(!solidMask[tryX][tryY]){
+                    solidMask[this.x][this.y] = false;
+                    this.x = tryX;
+                    this.y = tryY;
+                    solidMask[this.x][this.y] = true;
+                    this.tillMove = this.moveCooldown;
+                    slipped = true;
+                }
+            }
+            if(!slipped){
+                for(tryMove=0;tryMove<movePreference.length;tryMove++){
+                    tryX = this.x+movePreference[tryMove][0];
+                    tryY = this.y+movePreference[tryMove][1];
+                    if(isInBounds([tryX,tryY])){
+                        if(!solidMask[tryX][tryY]){
+                            solidMask[this.x][this.y] = false;
+                            this.x = tryX; this.y = tryY;
+                            solidMask[this.x][this.y] = true;
+                            this.state.facing = moveName[tryMove];
+                            this.tillMove = this.moveCooldown;
+                            break;
+                        }
                     }
                 }
             }
