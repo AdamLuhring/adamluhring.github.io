@@ -132,9 +132,27 @@ function Dog(x,y){
                         this.state = {name:"spurred",exhaustion:0,moveCounts:[2,4,6,12,24]};
                     }
                 case "domesticated":
+                    chosenTarget = "player"; lowestDistance = manhattanDistance(this.x,this.y,player.x,player.y);
                     for(testTarget=0;testTarget<npc.length;testTarget++){
-
+                        testDistance = manhattanDistance(this.x,this.y,npc[testTarget].x,npc[testTarget].y);
+                        if((testDistance>0)&&(testDistance<=3)&&(testDistance<lowestDistance)){
+                            chosenTarget = testTarget;
+                            lowestDistance = testDistance;
+                        }
                     }
+                    target = {};
+                    switch(chosenTarget){
+                        case "player":
+                            target = {x:player.x,y:player.y};
+                            break;
+                        default:
+                            target = {x:npc[chosenTarget].x,y:npc[chosenTarget].y};
+                    }
+                    step = stepTowards({x:this.x,y:this.y},target);
+                    solidMask[this.x][this.y] = false;
+                    this.x += step.x; this.y += step.y;
+                    solidMask[this.x][this.y] = true;
+                    this.tillMove = 10;
             }
         }
         else{
@@ -270,6 +288,38 @@ function Spider(x,y){
         if(!(this.health>0)){
             solidMask[this.x][this.y] = false;
             npc.splice(npc.indexOf(this),1);
+        }
+    }
+}
+function manhattanDistance(x1,y1,x2,y2){
+    return Math.max(Math.abs(x2-x1),Math.abs(y2-y1));
+}
+function stepTowards(startPosition,goalPosition){
+    step = {x:Math.sign(goalPosition.x-startPosition.x),y:Math.sign(goalPosition.y-startPosition.y)};
+    if(Math.abs(goalPosition.x-startPosition.x)>=Math.abs(goalPosition.y-startPosition.y)){
+        if(!solidMask[startPosition.x+step.x][startPosition.y]){
+            return {x:step.x,y:0};
+        }
+        else{
+            if(!solidMask[startPosition.x][startPosition.y+step.y]){
+                return {x:0,y:step.y};
+            }
+            else{
+                return {x:0,y:0};
+            }
+        }
+    }
+    else{
+        if(!solidMask[startPosition.x][startPosition.y+step.y]){
+            return {x:0,y:step.y};
+        }
+        else{
+            if(!solidMask[startPosition.x+step.x][startPosition.y]){
+                return {x:step.x,y:0};
+            }
+            else{
+                return {x:0,y:0};
+            }
         }
     }
 }
