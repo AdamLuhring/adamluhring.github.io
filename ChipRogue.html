@@ -132,9 +132,9 @@ function Dog(x,y){
                         this.state = {name:"spurred",exhaustion:0,moveCounts:[2,4,6,12,24]};
                     }
                 case "domesticated":
-                    chosenTarget = "player"; lowestDistance = manhattanDistance(this.x,this.y,player.x,player.y);
+                    chosenTarget = "player"; lowestDistance = chebyshevDistance(this.x,this.y,player.x,player.y);
                     for(testTarget=0;testTarget<npc.length;testTarget++){
-                        testDistance = manhattanDistance(this.x,this.y,npc[testTarget].x,npc[testTarget].y);
+                        testDistance = chebyshevDistance(this.x,this.y,npc[testTarget].x,npc[testTarget].y);
                         if((testDistance>0)&&(testDistance<=3)&&(testDistance<lowestDistance)){
                             chosenTarget = testTarget;
                             lowestDistance = testDistance;
@@ -148,7 +148,7 @@ function Dog(x,y){
                         default:
                             target = {x:npc[chosenTarget].x,y:npc[chosenTarget].y};
                     }
-                    step = stepTowards({x:this.x,y:this.y},target);
+                    step = calculateStepTowards({x:this.x,y:this.y},target);
                     solidMask[this.x][this.y] = false;
                     this.x += step.x; this.y += step.y;
                     solidMask[this.x][this.y] = true;
@@ -291,35 +291,31 @@ function Spider(x,y){
         }
     }
 }
-function manhattanDistance(x1,y1,x2,y2){
+function chebyshevDistance(x1,y1,x2,y2){
     return Math.max(Math.abs(x2-x1),Math.abs(y2-y1));
 }
-function stepTowards(startPosition,goalPosition){
-    step = {x:Math.sign(goalPosition.x-startPosition.x),y:Math.sign(goalPosition.y-startPosition.y)};
-    if(Math.abs(goalPosition.x-startPosition.x)>=Math.abs(goalPosition.y-startPosition.y)){
-        if(!solidMask[startPosition.x+step.x][startPosition.y]){
-            return {x:step.x,y:0};
-        }
-        else{
-            if(!solidMask[startPosition.x][startPosition.y+step.y]){
-                return {x:0,y:step.y};
-            }
-            else{
-                return {x:0,y:0};
-            }
-        }
+function manhattanDistance(from,to){
+    return Math.abs(to.x-from.x)+Math.abs(to.y-from.y);
+}
+function calculateStepTowards(startPosition,goalPosition){
+    sign = {x:Math.sign(goalPosition.x-startPosition.x),y:Math.sign(goalPosition.y-startPosition.y)};
+    horizontalClear = solidMask[startPosition.x+sign.x][startPosition.y];
+    verticalClear = solidMask[startPosition.x][startPosition.y+sign.y];
+    if(!(horizontalClear||verticalClear)){
+        return startPosition;
     }
     else{
-        if(!solidMask[startPosition.x][startPosition.y+step.y]){
-            return {x:0,y:step.y};
+        if(!horizontalClear){
+            return {x:startPosition.x,y:startPosition.y+sign.y};
+        }
+        if(!verticalClear){
+            return {x:startPosition.x+sign.x,y:startPosition.y};
+        }
+        if(Math.random()>(Math.abs(goalPosition.x-startPosition.x)/manhattanDistance(startPosition,goalPosition))){
+            return {x:startPosition.x+sign.x,y:startPosition.y};
         }
         else{
-            if(!solidMask[startPosition.x+step.x][startPosition.y]){
-                return {x:step.x,y:0};
-            }
-            else{
-                return {x:0,y:0};
-            }
+            return {x:startPosition.x,y:startPosition.y+sign.y};
         }
     }
 }
